@@ -15,6 +15,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Home,
+  X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -66,9 +67,10 @@ const sidebarItems = [
 
 interface SidebarProps {
   className?: string;
+  onClose?: () => void;
 }
 
-export function Sidebar({ className }: SidebarProps) {
+export function Sidebar({ className, onClose }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
 
@@ -114,7 +116,7 @@ export function Sidebar({ className }: SidebarProps) {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
-                <Link href={item.href}>
+                <Link href={item.href} onClick={onClose}>
                   <Button
                     variant={isActive ? 'secondary' : 'ghost'}
                     className={cn(

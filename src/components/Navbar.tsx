@@ -180,13 +180,37 @@ export function Navbar() {
                   key={item.href}
                   href={item.href}
                   onClick={() => setIsMenuOpen(false)}
-                  className="block px-4 py-3 rounded-xl font-semibold text-gray-700 
-                  hover:bg-gradient-to-r hover:from-green-500 hover:to-yellow-500 
+                  className="block px-4 py-3 rounded-xl font-semibold text-gray-700
+                  hover:bg-gradient-to-r hover:from-green-500 hover:to-yellow-500
                   hover:text-white transition"
                 >
                   {item.label}
                 </Link>
               ))}
+
+              {!session && (
+                <>
+                  <Link
+                    href="/auth/signin"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="block px-4 py-3 rounded-xl font-semibold text-gray-700
+                    hover:bg-gradient-to-r hover:from-green-500 hover:to-yellow-500
+                    hover:text-white transition"
+                  >
+                    Log In
+                  </Link>
+
+                  <Link
+                    href="/signup"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="block px-4 py-3 rounded-xl font-semibold text-gray-700
+                    hover:bg-gradient-to-r hover:from-green-500 hover:to-yellow-500
+                    hover:text-white transition"
+                  >
+                    Sign Up
+                  </Link>
+                </>
+              )}
             </div>
           </motion.div>
         )}

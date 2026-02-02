@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { motion } from 'framer-motion';
-import { MapPin, Ruler, Droplets, IndianRupee, Calendar, Image as ImageIcon } from 'lucide-react';
+import { MapPin, Ruler, Droplets, IndianRupee, Calendar, Image as ImageIcon, X, Upload } from 'lucide-react';
 
 export default function AddLandPage() {
   const { data: session, status } = useSession();
