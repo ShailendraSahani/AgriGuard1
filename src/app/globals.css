@@ -1,0 +1,231 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* =========================================
+   ✅ ROOT THEME FIX (MOST IMPORTANT)
+========================================= */
+:root {
+  /* ✅ FIX: Rectangle Buttons & Cards */
+  --radius: 1.5rem;
+
+  /* 🌱 Agriguard Theme Colors */
+  --primary-green: #22c55e; /* green-500 */
+  --primary-green-dark: #16a34a; /* green-600 */
+  --accent-yellow: #eab308; /* yellow-500 */
+  --accent-yellow-dark: #ca8a04; /* yellow-600 */
+
+  /* Background + Text */
+  --background: #ffffff;
+  --foreground: #111827;
+
+  /* UI Colors */
+  --card: #ffffff;
+  --card-foreground: #111827;
+  --popover: #ffffff;
+  --popover-foreground: #111827;
+
+  --border: rgba(0, 0, 0, 0.08);
+  --input: rgba(0, 0, 0, 0.12);
+
+  --primary: var(--primary-green);
+  --primary-foreground: #ffffff;
+
+  --secondary: var(--accent-yellow);
+  --secondary-foreground: #ffffff;
+
+  --muted: #f3f4f6;
+  --muted-foreground: #6b7280;
+
+  --ring: var(--primary-green);
+
+  /* Sidebar */
+  --sidebar: #f9fafb;
+  --sidebar-foreground: #111827;
+  --sidebar-border: rgba(0, 0, 0, 0.08);
+}
+
+/* =========================================
+   ✅ SHADCN THEME MAPPING
+========================================= */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Radius System */
+  --radius-sm: calc(var(--radius) - 6px);
+  --radius-md: calc(var(--radius) - 3px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 6px);
+  --radius-2xl: calc(var(--radius) + 12px);
+  --radius-3xl: calc(var(--radius) + 18px);
+}
+
+/* =========================================
+   ✅ BASE STYLING
+========================================= */
+body {
+  font-family: "Inter", Arial, sans-serif;
+  background: var(--background);
+  color: var(--foreground);
+  line-height: 1.6;
+}
+
+/* =========================================
+   ✅ GLOBAL ROUNDING FIX
+   (Cards, Buttons, Inputs Rounded)
+========================================= */
+@layer base {
+  button,
+  input,
+  textarea,
+  select {
+    border-radius: var(--radius-xl) !important;
+  }
+
+  .card {
+    border-radius: var(--radius-2xl) !important;
+  }
+}
+
+/* =========================================
+   ✅ MODERN SHADOWS
+========================================= */
+.shadow-modern {
+  box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.12),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.shadow-modern-lg {
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.18);
+}
+
+/* =========================================
+   ✅ GRADIENT BACKGROUNDS
+========================================= */
+.gradient-green {
+  background: linear-gradient(
+    135deg,
+    var(--primary-green),
+    var(--primary-green-dark)
+  );
+}
+
+.gradient-yellow {
+  background: linear-gradient(
+    135deg,
+    var(--accent-yellow),
+    var(--accent-yellow-dark)
+  );
+}
+
+.gradient-green-yellow {
+  background: linear-gradient(
+    135deg,
+    var(--primary-green),
+    var(--accent-yellow),
+    var(--primary-green-dark)
+  );
+}
+
+/* =========================================
+   ✅ GLASS EFFECT (Modern UI)
+========================================= */
+.glass {
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+/* =========================================
+   ✅ SMOOTH TRANSITIONS
+========================================= */
+.transition-modern {
+  transition: all 0.3s ease-in-out;
+}
+
+/* =========================================
+   ✅ HOVER LIFT EFFECT
+========================================= */
+.hover-lift {
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.15);
+}
+
+/* =========================================
+   ✅ GRADIENT TEXT
+========================================= */
+.gradient-text {
+  background: linear-gradient(
+    90deg,
+    var(--primary-green),
+    var(--accent-yellow)
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* =========================================
+   ✅ SCROLLBAR MODERN
+========================================= */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f9fafb;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--primary-green);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-green-dark);
+}
+
+/* =========================================
+   🌙 DARK MODE SUPPORT
+========================================= */
+.dark {
+  --background: #0f172a;
+  --foreground: #f8fafc;
+
+  --card: #1e293b;
+  --card-foreground: #f8fafc;
+
+  --border: rgba(255, 255, 255, 0.15);
+  --input: rgba(255, 255, 255, 0.2);
+
+  --muted: rgba(255, 255, 255, 0.08);
+  --muted-foreground: rgba(255, 255, 255, 0.6);
+
+  --sidebar: #1e293b;
+}
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
