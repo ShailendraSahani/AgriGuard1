@@ -4,17 +4,21 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  Tooltip,
-  ResponsiveContainer,
-  LineChart,
-  Line,
-} from 'recharts';
+// ✅ Recharts (SSR safe)
+const ResponsiveContainer = dynamic(
+  () => import('recharts').then((m) => m.ResponsiveContainer),
+  { ssr: false }
+);
+const BarChart = dynamic(() => import('recharts').then((m) => m.BarChart), { ssr: false });
+const Bar = dynamic(() => import('recharts').then((m) => m.Bar), { ssr: false });
+const XAxis = dynamic(() => import('recharts').then((m) => m.XAxis), { ssr: false });
+const Tooltip = dynamic(() => import('recharts').then((m) => m.Tooltip), { ssr: false });
+const LineChart = dynamic(() => import('recharts').then((m) => m.LineChart), { ssr: false });
+const Line = dynamic(() => import('recharts').then((m) => m.Line), { ssr: false });
 
+// ---------------- TYPES ----------------
 interface WeatherData {
   main: {
     temp: number;
@@ -31,6 +35,7 @@ interface AnalyticsData {
   cropData: Array<{ week: string; growth: number }>;
 }
 
+// ---------------- COMPONENT ----------------
 export default function UserDashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -40,53 +45,49 @@ export default function UserDashboard() {
 
   useEffect(() => {
     if (status === 'loading') return;
-    if (!session) router.push('/auth/signin');
 
-    // ✅ REAL TIME WEATHER API FETCH
+    if (!session) {
+      router.push('/auth/signin');
+      return;
+    }
+
+    const location =
+      (session.user as any)?.location ?? 'Delhi';
+
+    // 🌦 Weather
     const fetchWeather = async () => {
       try {
-        const location = session?.user?.location || 'Delhi';
-        const res = await fetch(`/api/weather?location=${encodeURIComponent(location)}`);
-        if (!res.ok) {
-          const errorData = await res.json().catch(() => ({}));
-          console.error('Failed to fetch weather data:', errorData.error || res.statusText);
-          // Set fallback weather data
-          setWeather({
-            main: { temp: 25, humidity: 60 },
-            weather: [{ description: 'Clear sky' }]
-          });
-          return;
-        }
+        const res = await fetch(
+          `/api/weather?location=${encodeURIComponent(location)}`
+        );
+
+        if (!res.ok) throw new Error('Weather API failed');
+
         const data = await res.json();
         setWeather(data);
-      } catch (err) {
-        console.error('Error fetching weather:', err);
-        // Set fallback weather data on network error
+      } catch {
         setWeather({
           main: { temp: 25, humidity: 60 },
-          weather: [{ description: 'Clear sky' }]
+          weather: [{ description: 'Clear sky' }],
         });
       }
     };
 
-    // ✅ REAL TIME ANALYTICS API FETCH
+    // 📊 Analytics
     const fetchAnalytics = async () => {
       try {
         const res = await fetch('/api/user/analytics');
-        if (!res.ok) {
-          console.error('Failed to fetch analytics data');
-          return;
-        }
+        if (!res.ok) throw new Error('Analytics API failed');
         const data = await res.json();
         setAnalytics(data);
       } catch (err) {
-        console.log(err);
+        console.error(err);
       }
     };
 
     fetchWeather();
     fetchAnalytics();
-  }, [session, status]);
+  }, [session, status, router]);
 
   if (status === 'loading') {
     return (
@@ -96,34 +97,34 @@ export default function UserDashboard() {
     );
   }
 
-  // ✅ Real-time Chart Data
-  const incomeData = analytics?.monthlyIncome || [
-    { month: 'Jan', income: 0 },
-    { month: 'Feb', income: 0 },
-    { month: 'Mar', income: 0 },
-    { month: 'Apr', income: 0 },
-  ];
+  const incomeData =
+    analytics?.monthlyIncome ?? [
+      { month: 'Jan', income: 0 },
+      { month: 'Feb', income: 0 },
+      { month: 'Mar', income: 0 },
+      { month: 'Apr', income: 0 },
+    ];
 
-  const cropData = analytics?.cropData || [
-    { week: 'Week 1', growth: 0 },
-    { week: 'Week 2', growth: 0 },
-    { week: 'Week 3', growth: 0 },
-    { week: 'Week 4', growth: 0 },
-  ];
+  const cropData =
+    analytics?.cropData ?? [
+      { week: 'Week 1', growth: 0 },
+      { week: 'Week 2', growth: 0 },
+      { week: 'Week 3', growth: 0 },
+      { week: 'Week 4', growth: 0 },
+    ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-yellow-50 to-white">
-      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
+      <div className="max-w-7xl mx-auto py-6 px-4">
 
-        {/* Header */}
+        {/* HEADER */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-10 gap-4">
           <div>
-            <h1 className="text-2xl sm:text-4xl font-extrabold text-gray-800">
-              Welcome,{" "}
+            <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-800">
+              Welcome,{' '}
               <span className="text-green-600">
                 {session?.user?.name}
-              </span>{" "}
+              </span>{' '}
               👨‍🌾
             </h1>
             <p className="text-gray-500 mt-2">
@@ -131,14 +132,15 @@ export default function UserDashboard() {
             </p>
           </div>
 
-          <button className="px-6 py-3 rounded-xl bg-gradient-to-r from-green-500 to-yellow-500 text-white font-bold shadow-lg hover:scale-105 transition w-full sm:w-auto">
-            + New Booking
-          </button>
+          <Link href="/bookings/new">
+            <button className="px-6 py-3 rounded-xl bg-gradient-to-r from-green-500 to-yellow-500 text-white font-bold shadow-lg hover:scale-105 transition w-full sm:w-auto">
+              + New Booking
+            </button>
+          </Link>
         </div>
 
-        {/* ✅ Farmer Profile Card */}
+        {/* PROFILE + WEATHER + INCOME */}
         <div className="grid md:grid-cols-3 gap-6 mb-10">
-
           <div className="p-6 rounded-2xl bg-white shadow-lg border">
             <h2 className="text-xl font-bold text-green-700">
               Farmer Profile 🧑‍🌾
@@ -146,25 +148,22 @@ export default function UserDashboard() {
             <p className="mt-3 text-gray-600">
               Name: {session?.user?.name}
             </p>
+            <p className="text-gray-600">Role: Farmer</p>
             <p className="text-gray-600">
-              Role: Farmer
-            </p>
-            <p className="text-gray-600">
-              Location: {session?.user?.location || 'Delhi, India'}
+              Location:{' '}
+              {(session?.user as any)?.location ?? 'Delhi, India'}
             </p>
           </div>
 
-          {/* Weather Card */}
           <div className="p-6 rounded-2xl bg-gradient-to-r from-green-500 to-yellow-500 text-white shadow-lg">
             <h2 className="text-xl font-bold">Live Weather 🌦</h2>
-
-            {weather && weather.main ? (
+            {weather ? (
               <div className="mt-4">
                 <p className="text-3xl font-extrabold">
                   {weather.main.temp}°C
                 </p>
                 <p className="capitalize">
-                  {weather.weather?.[0]?.description}
+                  {weather.weather[0]?.description}
                 </p>
                 <p className="text-sm mt-2">
                   Humidity: {weather.main.humidity}%
@@ -175,13 +174,12 @@ export default function UserDashboard() {
             )}
           </div>
 
-          {/* Quick Stats */}
           <div className="p-6 rounded-2xl bg-white shadow-lg border">
             <h2 className="text-xl font-bold text-yellow-600">
               Total Income 💰
             </h2>
             <p className="text-4xl font-extrabold mt-4 text-gray-800">
-              ₹{analytics?.totalIncome?.toLocaleString() || '0'}
+              ₹{analytics?.totalIncome?.toLocaleString() ?? '0'}
             </p>
             <p className="text-sm text-gray-500 mt-2">
               +12% Growth this season
@@ -189,15 +187,12 @@ export default function UserDashboard() {
           </div>
         </div>
 
-        {/* ✅ Charts Section */}
+        {/* CHARTS */}
         <div className="grid lg:grid-cols-2 gap-8">
-
-          {/* Income Chart */}
           <div className="p-6 rounded-2xl bg-white shadow-lg border">
             <h2 className="text-xl font-bold text-green-700 mb-4">
               Monthly Income 📊
             </h2>
-
             <ResponsiveContainer width="100%" height={250}>
               <BarChart data={incomeData}>
                 <XAxis dataKey="month" />
@@ -207,12 +202,10 @@ export default function UserDashboard() {
             </ResponsiveContainer>
           </div>
 
-          {/* Crop Growth Chart */}
           <div className="p-6 rounded-2xl bg-white shadow-lg border">
             <h2 className="text-xl font-bold text-yellow-600 mb-4">
               Crop Growth 🌾
             </h2>
-
             <ResponsiveContainer width="100%" height={250}>
               <LineChart data={cropData}>
                 <XAxis dataKey="week" />
