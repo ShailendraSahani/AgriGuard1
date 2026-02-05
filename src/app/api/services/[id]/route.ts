@@ -4,6 +4,24 @@ import { authOptions } from '@/lib/auth';
 import dbConnect from '@/lib/db';
 import Service from '@/models/Service';
 
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    await dbConnect();
+    const { id } = await params;
+
+    const service = await Service.findById(id).populate('provider', 'name');
+
+    if (!service) {
+      return NextResponse.json({ error: 'Service not found' }, { status: 404 });
+    }
+
+    return NextResponse.json(service);
+  } catch (error) {
+    console.error('Error fetching service:', error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  }
+}
+
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     await dbConnect();
@@ -17,7 +35,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     const { name, category, price, serviceArea, availabilityDates, description } = await request.json();
 
     // Find the service and ensure it belongs to the current provider
-    const service = await Service.findOne({ _id: id, provider: (session.user as any)._id });
+    const service = await Service.findOne({ _id: id, provider: session.user.id });
 
     if (!service) {
       return NextResponse.json({ error: 'Service not found' }, { status: 404 });
@@ -51,7 +69,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     const { id } = await params;
 
     // Find and delete the service, ensuring it belongs to the current provider
-    const service = await Service.findOneAndDelete({ _id: id, provider: (session.user as any)._id });
+    const service = await Service.findOneAndDelete({ _id: id, provider: session.user.id });
 
     if (!service) {
       return NextResponse.json({ error: 'Service not found' }, { status: 404 });

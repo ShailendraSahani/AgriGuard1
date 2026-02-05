@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import { useSocket } from '@/contexts/SocketContext';
 import { StatsCards } from '@/components/admin/StatsCards';
 import { Charts } from '@/components/admin/Charts';
 import { PDFExport } from '@/components/admin/PDFExport';
@@ -13,7 +14,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import Modal from '@/components/ui/modal';
 import { Input } from '@/components/ui/input';
-import { Users, Wrench, MapPin, Package, Calendar, Activity } from 'lucide-react';
+import AddPackageForm from '@/components/admin/AddPackageForm';
+import { Users, Wrench, MapPin, Package as PackageIcon, Calendar, Activity } from 'lucide-react';
+import { IPackage } from '@/models/Package';
 
 interface User {
   _id: string;
@@ -97,6 +100,7 @@ interface ChartData {
 export default function AdminDashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const { socket } = useSocket();
   const [activeTab, setActiveTab] = useState('stats');
   const [modalOpen, setModalOpen] = useState(false);
   const [modalType, setModalType] = useState<'create' | 'edit'>('create');
@@ -204,21 +208,21 @@ export default function AdminDashboard() {
   if (!session || (session.user as { role: string })?.role !== 'admin') return null;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
-          <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+          <h1 className="text-3xl font-bold text-green-800">Admin Dashboard</h1>
           <div className="mt-6">
-            <div className="border-b border-gray-200">
+            <div className="border-b border-green-200">
               <nav className="-mb-px flex space-x-8">
                 {['stats', 'users', 'services', 'lands', 'packages', 'lease-requests', 'bookings'].map(tab => (
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
-                    className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                    className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
                       activeTab === tab
-                        ? 'border-indigo-500 text-indigo-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                        ? 'border-green-500 text-green-600'
+                        : 'border-transparent text-gray-500 hover:text-green-700 hover:border-green-300'
                     }`}
                   >
                     {tab.replace('-', ' ').toUpperCase()}
@@ -237,7 +241,7 @@ export default function AdminDashboard() {
                 className="space-y-6"
               >
                 <div className="flex justify-between items-center">
-                  <h2 className="text-2xl font-bold text-gray-900">Dashboard Overview</h2>
+                  <h2 className="text-2xl font-bold text-green-800">Dashboard Overview</h2>
                   <PDFExport data={users as unknown as Record<string, unknown>[]} title="Users Report" filename="users_report" />
                 </div>
 
@@ -291,10 +295,10 @@ export default function AdminDashboard() {
                 transition={{ duration: 0.5 }}
               >
                 <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-2xl font-bold text-gray-900">Users Management</h2>
+                  <h2 className="text-2xl font-bold text-green-800">Users Management</h2>
                   <div className="flex gap-2">
                     <PDFExport data={users as unknown as Record<string, unknown>[]} title="Users List" filename="users_report" />
-                    <Button onClick={() => handleCreate('users')} className="bg-green-600 hover:bg-green-700">
+                    <Button onClick={() => handleCreate('users')} className="bg-green-500 hover:bg-green-600">
                       <Users className="w-4 h-4 mr-2" />
                       Add User
                     </Button>
@@ -303,18 +307,18 @@ export default function AdminDashboard() {
                 <Card className="rounded-2xl shadow-lg">
                   <CardContent className="p-0">
                     <Table>
-                      <TableHeader>
+                      <TableHeader className="bg-green-600">
                         <TableRow>
-                          <TableHead>Name</TableHead>
-                          <TableHead>Email</TableHead>
-                          <TableHead>Role</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Actions</TableHead>
+                          <TableHead className="text-white font-semibold">Name</TableHead>
+                          <TableHead className="text-white font-semibold">Email</TableHead>
+                          <TableHead className="text-white font-semibold">Role</TableHead>
+                          <TableHead className="text-white font-semibold">Status</TableHead>
+                          <TableHead className="text-white font-semibold">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {users.map(user => (
-                          <TableRow key={user._id}>
+                        {users.map((user, index) => (
+                          <TableRow key={user._id} className={index % 2 === 0 ? 'bg-white' : 'bg-yellow-50'}>
                             <TableCell className="font-medium">{user.name}</TableCell>
                             <TableCell>{user.email}</TableCell>
                             <TableCell>
@@ -345,7 +349,7 @@ export default function AdminDashboard() {
                 transition={{ duration: 0.5 }}
               >
                 <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-2xl font-bold text-gray-900">Service Providers Management</h2>
+                  <h2 className="text-2xl font-bold text-green-800">Service Providers Management</h2>
                   <div className="flex gap-2">
                     <PDFExport data={services as unknown as Record<string, unknown>[]} title="Services Report" filename="services_report" />
                     <Button onClick={() => handleCreate('services')} className="bg-green-600 hover:bg-green-700">
@@ -357,18 +361,18 @@ export default function AdminDashboard() {
                 <Card className="rounded-2xl shadow-lg">
                   <CardContent className="p-0">
                     <Table>
-                      <TableHeader>
+                      <TableHeader className="bg-green-600">
                         <TableRow>
-                          <TableHead>Name</TableHead>
-                          <TableHead>Description</TableHead>
-                          <TableHead>Price</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Actions</TableHead>
+                          <TableHead className="text-white font-semibold">Name</TableHead>
+                          <TableHead className="text-white font-semibold">Description</TableHead>
+                          <TableHead className="text-white font-semibold">Price</TableHead>
+                          <TableHead className="text-white font-semibold">Status</TableHead>
+                          <TableHead className="text-white font-semibold">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {services.map(service => (
-                          <TableRow key={service._id}>
+                        {services.map((service, index) => (
+                          <TableRow key={service._id} className={index % 2 === 0 ? 'bg-white' : 'bg-yellow-50'}>
                             <TableCell className="font-medium">{service.name}</TableCell>
                             <TableCell>{service.description}</TableCell>
                             <TableCell>₹{service.price}</TableCell>
@@ -397,7 +401,7 @@ export default function AdminDashboard() {
                 transition={{ duration: 0.5 }}
               >
                 <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-2xl font-bold text-gray-900">Lands Management</h2>
+                  <h2 className="text-2xl font-bold text-green-800">Lands Management</h2>
                   <div className="flex gap-2">
                     <PDFExport data={lands as unknown as Record<string, unknown>[]} title="Lands Report" filename="lands_report" />
                     <Button onClick={() => handleCreate('lands')} className="bg-green-600 hover:bg-green-700">
@@ -409,19 +413,19 @@ export default function AdminDashboard() {
                 <Card className="rounded-2xl shadow-lg">
                   <CardContent className="p-0">
                     <Table>
-                      <TableHeader>
+                      <TableHeader className="bg-green-600">
                         <TableRow>
-                          <TableHead>Title</TableHead>
-                          <TableHead>Location</TableHead>
-                          <TableHead>Size</TableHead>
-                          <TableHead>Lease Price</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Actions</TableHead>
+                          <TableHead className="text-white font-semibold">Title</TableHead>
+                          <TableHead className="text-white font-semibold">Location</TableHead>
+                          <TableHead className="text-white font-semibold">Size</TableHead>
+                          <TableHead className="text-white font-semibold">Lease Price</TableHead>
+                          <TableHead className="text-white font-semibold">Status</TableHead>
+                          <TableHead className="text-white font-semibold">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {lands.map(land => (
-                          <TableRow key={land._id}>
+                        {lands.map((land, index) => (
+                          <TableRow key={land._id} className={index % 2 === 0 ? 'bg-white' : 'bg-yellow-50'}>
                             <TableCell className="font-medium">{land.title}</TableCell>
                             <TableCell>{`${land.location.state}, ${land.location.district}, ${land.location.village}`}</TableCell>
                             <TableCell>{land.size.value} {land.size.unit}</TableCell>
@@ -451,11 +455,11 @@ export default function AdminDashboard() {
                 transition={{ duration: 0.5 }}
               >
                 <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-2xl font-bold text-gray-900">Packages Management</h2>
+                  <h2 className="text-2xl font-bold text-green-800">Packages Management</h2>
                   <div className="flex gap-2">
                     <PDFExport data={packages as unknown as Record<string, unknown>[]} title="Packages Report" filename="packages_report" />
-                    <Button onClick={() => handleCreate('packages')} className="bg-green-600 hover:bg-green-700">
-                      <Package className="w-4 h-4 mr-2" />
+                    <Button onClick={() => handleCreate('packages')} className="bg-green-500 via-yellow-500 hover:bg-green-700">
+                      <PackageIcon className="w-4 h-4 mr-2" />
                       Add Package
                     </Button>
                   </div>
@@ -463,18 +467,18 @@ export default function AdminDashboard() {
                 <Card className="rounded-2xl shadow-lg">
                   <CardContent className="p-0">
                     <Table>
-                      <TableHeader>
+                      <TableHeader className="bg-green-600">
                         <TableRow>
-                          <TableHead>Name</TableHead>
-                          <TableHead>Crop</TableHead>
-                          <TableHead>Price</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Actions</TableHead>
+                          <TableHead className="text-white font-semibold">Name</TableHead>
+                          <TableHead className="text-white font-semibold">Crop</TableHead>
+                          <TableHead className="text-white font-semibold">Price</TableHead>
+                          <TableHead className="text-white font-semibold">Status</TableHead>
+                          <TableHead className="text-white font-semibold">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {packages.map(pkg => (
-                          <TableRow key={pkg._id}>
+                        {packages.map((pkg, index) => (
+                          <TableRow key={pkg._id} className={index % 2 === 0 ? 'bg-white' : 'bg-yellow-50'}>
                             <TableCell className="font-medium">{pkg.name}</TableCell>
                             <TableCell>{pkg.crop}</TableCell>
                             <TableCell>₹{pkg.price}</TableCell>
@@ -503,7 +507,7 @@ export default function AdminDashboard() {
                 transition={{ duration: 0.5 }}
               >
                 <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-2xl font-bold text-gray-900">Lease Requests Management</h2>
+                  <h2 className="text-2xl font-bold text-green-800">Lease Requests Management</h2>
                   <div className="flex gap-2">
                     <PDFExport data={leaseRequests as unknown as Record<string, unknown>[]} title="Lease Requests Report" filename="lease_requests_report" />
                     <Button onClick={() => handleCreate('lease-requests')} className="bg-green-600 hover:bg-green-700">
@@ -515,17 +519,17 @@ export default function AdminDashboard() {
                 <Card className="rounded-2xl shadow-lg">
                   <CardContent className="p-0">
                     <Table>
-                      <TableHeader>
+                      <TableHeader className="bg-green-600">
                         <TableRow>
-                          <TableHead>Land Title</TableHead>
-                          <TableHead>Requester</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Actions</TableHead>
+                          <TableHead className="text-white font-semibold">Land Title</TableHead>
+                          <TableHead className="text-white font-semibold">Requester</TableHead>
+                          <TableHead className="text-white font-semibold">Status</TableHead>
+                          <TableHead className="text-white font-semibold">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {leaseRequests.map(request => (
-                          <TableRow key={request._id}>
+                        {leaseRequests.map((request, index) => (
+                          <TableRow key={request._id} className={index % 2 === 0 ? 'bg-white' : 'bg-yellow-50'}>
                             <TableCell className="font-medium">{request.land?.title || 'Unknown Land'}</TableCell>
                             <TableCell>{request.requester?.name || 'Unknown Requester'}</TableCell>
                             <TableCell>
@@ -555,7 +559,7 @@ export default function AdminDashboard() {
                 transition={{ duration: 0.5 }}
               >
                 <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-2xl font-bold text-gray-900">Bookings Management</h2>
+                  <h2 className="text-2xl font-bold text-green-800">Bookings Management</h2>
                   <div className="flex gap-2">
                     <PDFExport data={bookings as unknown as Record<string, unknown>[]} title="Bookings Report" filename="bookings_report" />
                     <Button onClick={() => handleCreate('bookings')} className="bg-green-600 hover:bg-green-700">
@@ -567,17 +571,17 @@ export default function AdminDashboard() {
                 <Card className="rounded-2xl shadow-lg">
                   <CardContent className="p-0">
                     <Table>
-                      <TableHeader>
+                      <TableHeader className="bg-green-600">
                         <TableRow>
-                          <TableHead>Service</TableHead>
-                          <TableHead>Customer</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Actions</TableHead>
+                          <TableHead className="text-white font-semibold">Service</TableHead>
+                          <TableHead className="text-white font-semibold">Customer</TableHead>
+                          <TableHead className="text-white font-semibold">Status</TableHead>
+                          <TableHead className="text-white font-semibold">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {bookings.map(booking => (
-                          <TableRow key={booking._id}>
+                        {bookings.map((booking, index) => (
+                          <TableRow key={booking._id} className={index % 2 === 0 ? 'bg-white' : 'bg-yellow-50'}>
                             <TableCell className="font-medium">{booking.service?.name || 'Service Deleted'}</TableCell>
                             <TableCell>{booking.customer?.name || 'Unknown Customer'}</TableCell>
                             <TableCell>
@@ -686,31 +690,22 @@ export default function AdminDashboard() {
             </>
           )}
           {currentEntity === 'packages' && (
-            <>
-              <Input
-                placeholder="Name"
-                value={formData.name || ''}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              />
-              <Input
-                placeholder="Crop"
-                value={formData.crop || ''}
-                onChange={(e) => setFormData({ ...formData, crop: e.target.value })}
-              />
-              <Input
-                placeholder="Price"
-                type="number"
-                value={formData.price || ''}
-                onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) })}
-              />
-            </>
+            <AddPackageForm
+              onSuccess={() => {
+                setModalOpen(false);
+                fetchData();
+              }}
+              initialData={modalType === 'edit' && editingItem ? (editingItem as unknown as Partial<IPackage>) : undefined}
+            />
           )}
           {/* Add similar form fields for other entities */}
         </div>
-        <div className="mt-6 flex justify-end space-x-2">
-          <Button onClick={() => setModalOpen(false)}>Cancel</Button>
-          <Button onClick={handleSubmit}>Save</Button>
-        </div>
+        {currentEntity !== 'packages' && (
+          <div className="mt-6 flex justify-end space-x-2">
+            <Button variant="secondary" onClick={() => setModalOpen(false)}>Cancel</Button>
+            <Button onClick={handleSubmit}>Save</Button>
+          </div>
+        )}
       </Modal>
     </div>
   );

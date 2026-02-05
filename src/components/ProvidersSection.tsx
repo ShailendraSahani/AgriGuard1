@@ -4,45 +4,62 @@ import { useState } from 'react';
 import useSWR from 'swr';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Search, Star, Wrench, MapPin, Award, Shield, Users, TrendingUp } from 'lucide-react';
-import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
+
+import {
+  Star,
+  MapPin,
+  MessageCircle,
+  ShieldCheck,
+} from 'lucide-react';
+
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+} from '@/components/ui/card';
+
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 
 interface Provider {
   _id: string;
   name: string;
-  email: string;
   servicesCount: number;
-  landsCount: number;
   rating: number;
   location: string;
+  image?: string;
+  online?: boolean;
 }
 
-const fetcher = (url: string) => fetch(url).then(res => res.json());
+const fetcher = (url: string) =>
+  fetch(url).then((res) => res.json());
 
 export function ProvidersSection() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const { data, error, isLoading } = useSWR('/api/providers?limit=6', fetcher, { refreshInterval: 5000 });
+  const [page, setPage] = useState(1);
+  const limit = 8;
+
+  const { data, isLoading } = useSWR(
+    `/api/providers?page=${page}&limit=${limit}`,
+    fetcher,
+    { refreshInterval: 5000 }
+  );
 
   const providers: Provider[] = data?.providers || [];
-
-  const filteredProviders = providers.filter((provider: Provider) =>
-    provider.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    provider.location?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const totalPages = data?.totalPages || 1;
 
   if (isLoading) {
     return (
       <section className="py-20 bg-gradient-to-br from-green-50 to-yellow-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <motion.div
-              className="animate-spin rounded-full h-16 w-16 border-4 border-green-500 border-t-yellow-500 mx-auto"
-              animate={{ rotate: 360 }}
-              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-            />
-          </div>
+        <div className="text-center">
+          <motion.div
+            className="animate-spin rounded-full h-14 w-14 border-4 border-green-500 border-t-yellow-500 mx-auto"
+            animate={{ rotate: 360 }}
+            transition={{
+              duration: 1,
+              repeat: Infinity,
+              ease: 'linear',
+            }}
+          />
         </div>
       </section>
     );
@@ -50,140 +67,145 @@ export function ProvidersSection() {
 
   return (
     <section className="py-20 bg-gradient-to-br from-green-50 to-yellow-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full px-4">
+
+        {/* Heading */}
         <motion.div
-          className="text-center mb-16"
+          className="text-center mb-14"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          viewport={{ once: true }}
         >
-          <h2 className="text-4xl font-extrabold text-green-800 mb-6 gradient-text">
-            Trusted Service Providers
+          <h2 className="text-4xl font-extrabold text-green-700">
+            Trusted Providers 🌱
           </h2>
-          <p className="text-xl text-green-400 mb-10 max-w-2xl mx-auto">
-            Connect with verified farming service providers
+
+          <p className="text-lg text-gray-600 mt-3 max-w-xl mx-auto">
+            Verified farming experts with online support & direct chat
           </p>
-          <div className="max-w-lg mx-auto">
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-green-500" />
-              <Input
-                type="text"
-                placeholder="Search providers by name or location..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-12 pr-6 py-4 border-2 border-green-200 rounded-xl focus:ring-4 focus:ring-green-300 focus:border-green-500 shadow-modern transition-modern bg-white/80 backdrop-blur-sm"
-              />
-            </div>
-          </div>
         </motion.div>
 
-        <motion.div
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          viewport={{ once: true }}
+        {/* Providers Grid */}
+        <div
+          className="
+            grid gap-6
+            grid-cols-1
+            sm:grid-cols-2
+            md:grid-cols-3
+            lg:grid-cols-4
+          "
         >
-          {filteredProviders.map((provider, index) => (
+          {providers.map((provider, index) => (
             <motion.div
               key={provider._id}
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: index * 0.1 }}
-              viewport={{ once: true }}
-              whileHover={{ y: -5 }}
-              className="hover-lift"
+              transition={{ delay: index * 0.08 }}
+              whileHover={{ scale: 1.03 }}
             >
-              <Card className="bg-white/90 backdrop-blur-sm rounded-full shadow-modern overflow-hidden border-0 h-full relative">
-                {/* Top Rated Badge */}
-                {provider.rating >= 4.5 && (
-                  <div className="absolute top-4 left-4 glass rounded-full px-3 py-1 text-sm font-bold text-yellow-800 flex items-center bg-yellow-100/80">
-                    <Award className="h-3 w-3 mr-1" />
-                    Top Rated
-                  </div>
+              {/* Card */}
+              <Card className="relative h-full rounded-2xl border border-green-200 bg-white/90 shadow-md hover:shadow-xl transition flex flex-col overflow-hidden">
+
+                {/* Online Badge */}
+                {provider.online && (
+                  <span className="absolute top-3 right-3 flex items-center gap-1 bg-green-500 text-white text-xs px-3 py-1 rounded-full shadow">
+                    🟢 Online
+                  </span>
                 )}
 
-                <CardHeader className="p-8 pb-4">
-                  <div className="flex items-center mb-6">
-                    <motion.div
-                      className="w-16 h-16 bg-gradient-to-br from-green-100 to-yellow-100 rounded-full flex items-center justify-center mr-6 relative"
-                      whileHover={{ scale: 1.1, rotate: 5 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      <span className="text-green-500 font-bold text-2xl">
-                        {provider.name.charAt(0)}
-                      </span>
-                      {/* Verified Checkmark */}
-                      <div className="absolute -bottom-1 -right-1 bg-green-500 rounded-full p-1">
-                        <Shield className="h-3 w-3 text-white" />
-                      </div>
-                    </motion.div>
-                    <div>
-                      <h3 className="text-2xl font-bold text-green-800 mb-2">
-                        {provider.name}
-                      </h3>
-                      <div className="flex items-center text-green-500">
-                        <MapPin className="h-4 w-4 mr-2" />
-                        <span className="font-medium">{provider.location}</span>
-                      </div>
-                    </div>
-                  </div>
+                {/* Profile Image */}
+                <div className="h-32 w-full bg-gradient-to-r from-green-500 to-yellow-500 flex justify-center items-center">
+                  <img
+                    src={
+                      provider.image ||
+                      'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'
+                    }
+                    alt={provider.name}
+                    className="w-20 h-20 rounded-full border-4 border-white shadow-lg object-cover"
+                  />
+                </div>
+
+                {/* Header */}
+                <CardHeader className="p-5 text-center">
+                  <h3 className="text-lg font-bold text-gray-800 flex justify-center items-center gap-1">
+                    {provider.name}
+                    <ShieldCheck className="w-4 h-4 text-green-500" />
+                  </h3>
+
+                  <p className="text-sm text-gray-500 flex justify-center items-center mt-2">
+                    <MapPin className="w-4 h-4 mr-1 text-green-500" />
+                    {provider.location}
+                  </p>
                 </CardHeader>
-                <CardContent className="p-8 pt-0">
-                  <div className="flex items-center justify-between mb-6">
-                    <div className="glass rounded-xl px-4 py-2 flex items-center">
-                      <Star className="h-4 w-4 text-yellow-500 mr-2" />
-                      <span className="text-lg font-bold text-yellow-800">{provider.rating}</span>
-                    </div>
-                    <div className="flex items-center text-gray-600 bg-gray-100 px-4 py-2 rounded-full">
-                      <Wrench className="h-4 w-4 mr-1" />
-                      <span className="font-medium">
-                        {provider.servicesCount} services • {provider.landsCount} lands
-                      </span>
-                    </div>
+
+                {/* Content */}
+                <CardContent className="px-5 pb-4 flex-grow">
+                  <div className="flex justify-between items-center">
+
+                    {/* Rating */}
+                    <span className="flex items-center gap-1 bg-yellow-100 text-yellow-800 px-3 py-1 rounded-lg text-sm font-semibold">
+                      <Star className="w-4 h-4 text-yellow-500" />
+                      {provider.rating}
+                    </span>
+
+                    {/* Services */}
+                    <span className="bg-green-100 text-green-700 px-3 py-1 rounded-lg text-sm font-semibold">
+                      {provider.servicesCount} Services
+                    </span>
                   </div>
                 </CardContent>
-                <CardFooter className="p-8 pt-0">
-                  <div className="flex justify-between items-center w-full">
-                    <Link href={`/providers/${provider._id}`}>
-                      <Button
-                        variant="ghost"
-                        className="text-green-500 hover:text-green-500 hover:bg-green-50 font-bold text-lg transition-modern"
-                      >
-                        View Profile
-                      </Button>
-                    </Link>
-                    <Link href={`/contact/${provider._id}`}>
-                      <Button
-                        className="bg-yellow-500 hover:bg-yellow-500 text-white py-3 px-6 rounded-full font-bold shadow-modern hover:shadow-modern-lg transition-modern transform hover:scale-105"
-                      >
-                        Contact
-                      </Button>
-                    </Link>
-                  </div>
+
+                {/* Footer Buttons */}
+                <CardFooter className="p-5 pt-0 flex gap-3">
+
+                  {/* Profile Button */}
+                  <Link href={`/providers/${provider._id}`} className="w-full">
+                    <Button className="w-full rounded-full bg-green-500 hover:bg-yellow-500 hover:text-black font-bold">
+                      View
+                    </Button>
+                  </Link>
+
+                  {/* Direct Chat Button */}
+                  <Link href={`/chat/${provider._id}`} className="w-full">
+                    <Button
+                      variant="outline"
+                      className="w-full rounded-full border-green-500 text-green-700 hover:bg-green-50 font-bold flex items-center gap-1"
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                      Chat
+                    </Button>
+                  </Link>
                 </CardFooter>
               </Card>
             </motion.div>
           ))}
-        </motion.div>
+        </div>
 
-        <motion.div
-          className="text-center"
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-          viewport={{ once: true }}
-        >
-          <Link href="/providers">
-            <Button
-              size="lg"
-              className="bg-green-700 hover:bg-green-600 text-white px-10 py-4 rounded-full font-bold shadow-modern-lg hover:shadow-modern-lg transition-modern transform hover:scale-105"
-            >
-              View All Providers
-            </Button>
-          </Link>
-        </motion.div>
+        {/* Pagination + View More */}
+        <div className="flex justify-center items-center gap-4 mt-14">
+
+          {/* Prev */}
+          <Button
+            disabled={page === 1}
+            onClick={() => setPage(page - 1)}
+            className="rounded-full bg-green-500 hover:bg-yellow-500 font-bold"
+          >
+            ← Prev
+          </Button>
+
+          <span className="font-semibold text-gray-700">
+            Page {page} / {totalPages}
+          </span>
+
+          {/* Next */}
+          <Button
+            disabled={page === totalPages}
+            onClick={() => setPage(page + 1)}
+            className="rounded-full bg-green-500 hover:bg-yellow-500 font-bold"
+          >
+            Next →
+          </Button>
+        </div>
       </div>
     </section>
   );

@@ -8,6 +8,7 @@ import Service from '@/models/Service';
 import Package from '@/models/Package';
 import Booking from '@/models/Booking';
 import LeaseRequest from '@/models/LeaseRequest';
+import Slot from '@/models/Slot';
 import bcrypt from 'bcryptjs';
 
 interface SessionUser {
@@ -34,6 +35,7 @@ export async function POST(request: NextRequest) {
     await Package.deleteMany({});
     await Booking.deleteMany({});
     await LeaseRequest.deleteMany({});
+    await Slot.deleteMany({});
 
     // Create admin user
     const adminPassword = await bcrypt.hash('admin123', 10);
@@ -138,34 +140,74 @@ export async function POST(request: NextRequest) {
     // Create services
     const service1 = new Service({
       name: 'Tractor Plowing Service',
-      category: 'Plowing',
+      category: 'Tractor Rental',
       price: 2000,
       serviceArea: 'Punjab',
-      availabilityDates: [new Date('2024-02-01'), new Date('2024-02-15')],
+      availabilityDates: {
+        start: new Date('2024-02-01'),
+        end: new Date('2024-02-15')
+      },
       description: 'Professional tractor plowing service for farmland preparation',
       provider: provider1._id
     });
 
     const service2 = new Service({
       name: 'Crop Spraying Service',
-      category: 'Pest Control',
+      category: 'Drone Spray',
       price: 1500,
       serviceArea: 'Haryana',
-      availabilityDates: [new Date('2024-02-05'), new Date('2024-02-20')],
+      availabilityDates: {
+        start: new Date('2024-02-05'),
+        end: new Date('2024-02-20')
+      },
       description: 'Expert crop spraying and pest control services',
       provider: provider2._id
     });
     await service1.save();
     await service2.save();
 
+    // Generate slots for services
+    const times = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00'];
+
+    // For service1
+    const start1 = new Date(service1.availabilityDates.start);
+    const end1 = new Date(service1.availabilityDates.end);
+    for (let d = new Date(start1); d <= end1; d.setDate(d.getDate() + 1)) {
+      for (const time of times) {
+        const slot = new Slot({
+          service: service1._id,
+          date: new Date(d),
+          time,
+          status: 'available'
+        });
+        await slot.save();
+      }
+    }
+
+    // For service2
+    const start2 = new Date(service2.availabilityDates.start);
+    const end2 = new Date(service2.availabilityDates.end);
+    for (let d = new Date(start2); d <= end2; d.setDate(d.getDate() + 1)) {
+      for (const time of times) {
+        const slot = new Slot({
+          service: service2._id,
+          date: new Date(d),
+          time,
+          status: 'available'
+        });
+        await slot.save();
+      }
+    }
+
     // Create packages
     const package1 = new Package({
       name: 'Wheat Cultivation Package',
       crop: 'Wheat',
-      duration: '6 months',
+      durationDays: 180,
       price: 25000,
       features: ['Seeds', 'Fertilizers', 'Pest Control', 'Harvesting'],
-      description: 'Complete wheat cultivation package with all necessary inputs',
+      benefits: ['Expert advisory', 'Priority support'],
+      planType: 'PRO',
       provider: provider1._id,
       isActive: true
     });
@@ -173,10 +215,11 @@ export async function POST(request: NextRequest) {
     const package2 = new Package({
       name: 'Rice Farming Package',
       crop: 'Rice',
-      duration: '4 months',
+      durationDays: 120,
       price: 30000,
       features: ['High-quality seeds', 'Pesticides', 'Irrigation support', 'Technical guidance'],
-      description: 'Comprehensive rice farming package for maximum yield',
+      benefits: ['Soil testing', 'Seasonal reports'],
+      planType: 'PREMIUM',
       provider: provider2._id,
       isActive: true
     });

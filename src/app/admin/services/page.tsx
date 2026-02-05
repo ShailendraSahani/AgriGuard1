@@ -4,14 +4,14 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import { useSocket } from '@/contexts/SocketContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { PDFExport } from '@/components/admin/PDFExport';
 import { Wrench, Plus } from 'lucide-react';
-import Modal from '@/components/ui/modal';
-import AddServiceForm from '@/components/admin/AddServiceForm';
+
 
 interface ServiceItem {
   _id: string;
@@ -24,6 +24,7 @@ interface ServiceItem {
 export default function ServicesPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const { socket } = useSocket();
   const [services, setServices] = useState<ServiceItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -50,6 +51,20 @@ export default function ServicesPage() {
     fetchServices();
   }, [session, status, router]);
 
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleDataUpdate = () => {
+      fetchServices();
+    };
+
+    socket.on('dataUpdated', handleDataUpdate);
+
+    return () => {
+      socket.off('dataUpdated', handleDataUpdate);
+    };
+  }, [socket]);
+
   if (status === 'loading' || loading) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -70,7 +85,7 @@ export default function ServicesPage() {
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-gray-900">Services Management</h1>
         <div className="flex gap-2">
-          <Button onClick={() => setIsModalOpen(true)} className="bg-green-600 hover:bg-green-700">
+          <Button onClick={() => router.push('/admin/add-service')} className="bg-green-500 hover:bg-green-600">
             <Plus className="w-4 h-4 mr-2" />
             Add Service
           </Button>
@@ -113,14 +128,7 @@ export default function ServicesPage() {
         </CardContent>
       </Card>
 
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Add New Service">
-        <AddServiceForm
-          onSuccess={() => {
-            setIsModalOpen(false);
-            fetchServices();
-          }}
-        />
-      </Modal>
+
     </motion.div>
   );
 }

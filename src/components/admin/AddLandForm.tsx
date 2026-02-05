@@ -23,6 +23,8 @@ export default function AddLandForm({ onSuccess }: AddLandFormProps) {
     leasePrice: '',
     leaseDuration: '',
     farmer: '',
+    images: '',
+    availabilityStatus: 'available',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -49,6 +51,8 @@ export default function AddLandForm({ onSuccess }: AddLandFormProps) {
         leasePrice: parseFloat(formData.leasePrice),
         leaseDuration: formData.leaseDuration,
         farmer: formData.farmer,
+        images: formData.images ? formData.images.split(',').map(url => url.trim()) : [],
+        availabilityStatus: formData.availabilityStatus,
       };
 
       const res = await fetch('/api/admin/lands', {
@@ -73,6 +77,8 @@ export default function AddLandForm({ onSuccess }: AddLandFormProps) {
           leasePrice: '',
           leaseDuration: '',
           farmer: '',
+          images: '',
+          availabilityStatus: 'available',
         });
       } else {
         const data = await res.json();
@@ -100,7 +106,8 @@ export default function AddLandForm({ onSuccess }: AddLandFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="max-h-96 overflow-y-auto">
+      <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <Label htmlFor="title">Land Title</Label>
         <Input
@@ -250,6 +257,32 @@ export default function AddLandForm({ onSuccess }: AddLandFormProps) {
         />
       </div>
 
+      <div>
+        <Label htmlFor="images">Images (comma-separated URLs)</Label>
+        <Input
+          id="images"
+          name="images"
+          type="text"
+          value={formData.images}
+          onChange={handleChange}
+          placeholder="https://example.com/image1.jpg, https://example.com/image2.jpg"
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="availabilityStatus">Availability Status</Label>
+        <Select onValueChange={(value) => handleSelectChange('availabilityStatus', value)} defaultValue="available">
+          <SelectTrigger>
+            <SelectValue placeholder="Select status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="available">Available</SelectItem>
+            <SelectItem value="leased">Leased</SelectItem>
+            <SelectItem value="unavailable">Unavailable</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
       {error && (
         <div className="text-red-600 text-sm">{error}</div>
       )}
@@ -260,5 +293,6 @@ export default function AddLandForm({ onSuccess }: AddLandFormProps) {
         </Button>
       </div>
     </form>
+    </div>
   );
 }

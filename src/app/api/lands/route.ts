@@ -5,14 +5,34 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { sendLandAdded } from '@/lib/email';
 
+type CacheEntry = {
+  expiresAt: number;
+  data: any;
+};
+
+const globalCache = (globalThis as any).__landsCache as Map<string, CacheEntry> | undefined;
+const cache = globalCache ?? new Map<string, CacheEntry>();
+(globalThis as any).__landsCache = cache;
+const TTL_MS = 5 * 60 * 1000;
+
 export async function GET(request: Request) {
   try {
+    const cacheKey = request.url;
+    const cached = cache.get(cacheKey);
+    if (cached && cached.expiresAt > Date.now()) {
+      return NextResponse.json(cached.data);
+    }
+
     await dbConnect();
 
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '10');
     const page = parseInt(searchParams.get('page') || '1');
     const skip = (page - 1) * limit;
+    const lat = searchParams.get('lat');
+    const lng = searchParams.get('lng');
+    const radiusKm = searchParams.get('radiusKm');
+    const bbox = searchParams.get('bbox');
 
     // Build filter object
     const filter: any = {};
@@ -65,6 +85,30 @@ export async function GET(request: Request) {
       filter.waterAvailability = { $regex: waterAvailability, $options: 'i' };
     }
 
+    // Geo filters
+    if (bbox) {
+      const parts = bbox.split(',').map((value) => parseFloat(value));
+      if (parts.length === 4) {
+        const [west, south, east, north] = parts;
+        filter.centroid = {
+          $geoWithin: {
+            $box: [
+              [west, south],
+              [east, north],
+            ],
+          },
+        };
+      }
+    } else if (lat && lng) {
+      const radiusMeters = (radiusKm ? parseFloat(radiusKm) : 10) * 1000;
+      filter.centroid = {
+        $near: {
+          $geometry: { type: 'Point', coordinates: [parseFloat(lng), parseFloat(lat)] },
+          $maxDistance: radiusMeters,
+        },
+      };
+    }
+
     const lands = await Land.find(filter)
       .populate('farmer', 'name email')
       .sort({ createdAt: -1 })
@@ -73,7 +117,7 @@ export async function GET(request: Request) {
 
     const total = await Land.countDocuments(filter);
 
-    return NextResponse.json({
+    const payload = {
       lands,
       pagination: {
         page,
@@ -81,7 +125,11 @@ export async function GET(request: Request) {
         total,
         pages: Math.ceil(total / limit)
       }
-    });
+    };
+
+    cache.set(cacheKey, { expiresAt: Date.now() + TTL_MS, data: payload });
+
+    return NextResponse.json(payload);
   } catch (error) {
     console.error('Error fetching lands:', error);
     return NextResponse.json({ error: 'Failed to fetch lands' }, { status: 500 });
@@ -104,7 +152,9 @@ export async function POST(request: Request) {
       waterAvailability,
       leasePrice,
       leaseDuration,
-      images = []
+      images = [],
+      geometry,
+      centroid
     } = body;
 
     // Validation
@@ -117,6 +167,8 @@ export async function POST(request: Request) {
     const newLand = new Land({
       title,
       location,
+      geometry,
+      centroid,
       size,
       soilType,
       waterAvailability,
@@ -127,6 +179,7 @@ export async function POST(request: Request) {
     });
 
     const savedLand = await newLand.save();
+    cache.clear();
     return NextResponse.json(savedLand, { status: 201 });
   } catch (error) {
     console.error('Error creating land:', error);

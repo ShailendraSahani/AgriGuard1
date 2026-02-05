@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import connectDB from '@/lib/db';
 import Package from '@/models/Package';
+import { getSocketServer } from '@/lib/globalSocket';
 
 interface SessionUser {
   role: string;
@@ -46,15 +47,42 @@ export async function POST(request: NextRequest) {
     await connectDB();
 
     const body = await request.json();
-    const { name, crop, duration, price, features, description, provider, isActive } = body;
+    const {
+      name,
+      planType,
+      crop,
+      durationDays,
+      price,
+      discountPrice,
+      isPopular,
+      features,
+      limits,
+      aiModules,
+      notifications,
+      satelliteMonitoring,
+      support,
+      marketplaceAccess,
+      benefits,
+      provider,
+      isActive,
+    } = body;
 
     const packageItem = new Package({
       name,
+      planType,
       crop,
-      duration,
+      durationDays,
       price,
+      discountPrice,
+      isPopular,
       features,
-      description,
+      limits,
+      aiModules,
+      notifications,
+      satelliteMonitoring,
+      support,
+      marketplaceAccess,
+      benefits,
       provider,
       isActive
     });
@@ -62,6 +90,10 @@ export async function POST(request: NextRequest) {
     await packageItem.save();
 
     const savedPackage = await Package.findById(packageItem._id).populate('provider', 'name email');
+    const io = getSocketServer();
+    if (io) {
+      io.emit('packages-updated');
+    }
     return NextResponse.json(savedPackage, { status: 201 });
   } catch (error) {
     console.error('Error creating package:', error);

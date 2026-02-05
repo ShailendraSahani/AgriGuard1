@@ -1,8 +1,10 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { useEffect, useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useSocket } from '@/contexts/SocketContext';
 
 interface ChartData {
   month: string;
@@ -16,27 +18,74 @@ interface ChartsProps {
 }
 
 export function Charts({ bookingsData = [], revenueData = [] }: ChartsProps) {
-  // Sample data for demonstration
-  const defaultBookingsData = [
-    { month: 'Jan', bookings: 65 },
-    { month: 'Feb', bookings: 59 },
-    { month: 'Mar', bookings: 80 },
-    { month: 'Apr', bookings: 81 },
-    { month: 'May', bookings: 56 },
-    { month: 'Jun', bookings: 55 },
+  const { socket } = useSocket();
+  const [liveBookingsData, setLiveBookingsData] = useState<ChartData[]>([]);
+  const [liveRevenueData, setLiveRevenueData] = useState<ChartData[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Fetch analytics data
+  const fetchAnalytics = async () => {
+    try {
+      const response = await fetch('/api/admin/analytics');
+      if (response.ok) {
+        const data = await response.json();
+        setLiveBookingsData(data.bookingsData || []);
+        setLiveRevenueData(data.revenueData || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch analytics:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAnalytics();
+
+    // Listen for real-time updates
+    if (socket) {
+      socket.on('analytics-update', () => {
+        fetchAnalytics();
+      });
+
+      socket.on('booking-created', () => {
+        fetchAnalytics();
+      });
+
+      socket.on('booking-updated', () => {
+        fetchAnalytics();
+      });
+    }
+
+    return () => {
+      if (socket) {
+        socket.off('analytics-update');
+        socket.off('booking-created');
+        socket.off('booking-updated');
+      }
+    };
+  }, [socket]);
+
+  // Use live data if available, otherwise fall back to props or defaults
+  const bookings = liveBookingsData.length > 0 ? liveBookingsData :
+                   bookingsData.length > 0 ? bookingsData : [
+    { month: 'Jan', bookings: 0 },
+    { month: 'Feb', bookings: 0 },
+    { month: 'Mar', bookings: 0 },
+    { month: 'Apr', bookings: 0 },
+    { month: 'May', bookings: 0 },
+    { month: 'Jun', bookings: 0 },
   ];
 
-  const defaultRevenueData = [
-    { month: 'Jan', revenue: 4000 },
-    { month: 'Feb', revenue: 3000 },
-    { month: 'Mar', revenue: 5000 },
-    { month: 'Apr', revenue: 4500 },
-    { month: 'May', revenue: 6000 },
-    { month: 'Jun', revenue: 5500 },
+  const revenue = liveRevenueData.length > 0 ? liveRevenueData :
+                  revenueData.length > 0 ? revenueData : [
+    { month: 'Jan', revenue: 0 },
+    { month: 'Feb', revenue: 0 },
+    { month: 'Mar', revenue: 0 },
+    { month: 'Apr', revenue: 0 },
+    { month: 'May', revenue: 0 },
+    { month: 'Jun', revenue: 0 },
   ];
-
-  const bookings = bookingsData.length > 0 ? bookingsData : defaultBookingsData;
-  const revenue = revenueData.length > 0 ? revenueData : defaultRevenueData;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

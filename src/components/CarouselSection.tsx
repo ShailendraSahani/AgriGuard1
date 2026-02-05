@@ -2,26 +2,26 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import Image from "next/image";
 
 const slides = [
   {
     id: 1,
     title: 'Modern Farming Solutions',
     description: 'Discover cutting-edge agricultural technologies to boost your yield.',
-    image: '/Home.png', // Placeholder image
+    image: '/Home.png',
   },
   {
     id: 2,
     title: 'Sustainable Agriculture',
     description: 'Learn about eco-friendly practices for a greener future.',
-    image: '/Home1.png', // Placeholder image
+    image: '/Home1.png',
   },
   {
     id: 3,
     title: 'Expert Services',
     description: 'Connect with professionals for all your farming needs.',
-    image: '/carsoul4.jpeg', // Placeholder image
+    image: '/carsoul4.jpeg',
   },
 ];
 
@@ -29,76 +29,71 @@ export default function CarouselSection() {
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const nextSlide = () => {
-    setCurrentIndex((prevIndex) => (prevIndex + 1) % slides.length);
+    setCurrentIndex((prev) => (prev + 1) % slides.length);
   };
 
   const prevSlide = () => {
-    setCurrentIndex((prevIndex) => (prevIndex - 1 + slides.length) % slides.length);
-  };
-
-  const goToSlide = (index: number) => {
-    setCurrentIndex(index);
+    setCurrentIndex((prev) => (prev - 1 + slides.length) % slides.length);
   };
 
   useEffect(() => {
-    const timer = setInterval(nextSlide, 5000); // Auto-play every 5 seconds
+    const timer = setInterval(nextSlide, 5000);
     return () => clearInterval(timer);
   }, []);
 
   return (
-    <section className="relative w-full h-96 overflow-hidden bg-gradient-to-r from-green-500 to-yellow-500">
-      <AnimatePresence>
+    <section className="relative w-full h-64 md:h-80 lg:h-[480px] overflow-hidden shadow-2xl -mt-16">
+
+      <AnimatePresence mode="wait">
         <motion.div
           key={currentIndex}
-          initial={{ opacity: 0, x: 300 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -300 }}
-          transition={{ duration: 0.5 }}
+          initial={{ x: 100 }}
+          animate={{ x: 0 }}
+          exit={{ x: -100 }}
+          transition={{ duration: 0.7 }}
           className="absolute inset-0"
         >
-          <img
+          {/* ✅ Clear Image */}
+          <Image
             src={slides[currentIndex].image}
             alt={slides[currentIndex].title}
-            className="w-full h-full object-cover"
+            fill
+            priority
+            className="object-cover brightness-100"
           />
-          <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
-            <div className="text-center text-white px-4">
-              <h2 className="text-4xl font-bold mb-4">{slides[currentIndex].title}</h2>
-              <p className="text-xl mb-8">{slides[currentIndex].description}</p>
-              <button className="bg-white text-green-500 px-6 py-2 rounded-full font-semibold hover:bg-gray-100 transition-colors">
-                Learn More
-              </button>
-            </div>
+
+          {/* ✅ Bottom Gradient Overlay (Only bottom dark) */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+
+          {/* ✅ Text Bottom */}
+          <div className="absolute bottom-4 md:bottom-10 left-4 md:left-10 right-4 md:right-10 text-white">
+            <h2 className="text-2xl md:text-4xl font-extrabold drop-shadow-lg">
+              {slides[currentIndex].title}
+            </h2>
+
+            <p className="text-sm md:text-lg text-white/90 mt-2 max-w-2xl">
+              {slides[currentIndex].description}
+            </p>
+
+            {/* Button */}
+            <button className="mt-3 md:mt-5 px-4 md:px-6 py-2 md:py-3 bg-green-500 hover:bg-yellow-500 hover:text-black font-semibold rounded-full shadow-lg transition duration-300 text-sm md:text-base">
+              Explore More 🌱
+            </button>
           </div>
         </motion.div>
       </AnimatePresence>
 
-      {/* Navigation Arrows */}
-      <button
-        onClick={prevSlide}
-        className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full p-2 transition-all"
-        aria-label="Previous slide"
-      >
-        <ChevronLeft className="w-6 h-6 text-white" />
-      </button>
-      <button
-        onClick={nextSlide}
-        className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full p-2 transition-all"
-        aria-label="Next slide"
-      >
-        <ChevronRight className="w-6 h-6 text-white" />
-      </button>
-
       {/* Indicators */}
-      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
+      <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex gap-3">
         {slides.map((_, index) => (
           <button
             key={index}
-            onClick={() => goToSlide(index)}
-            className={`w-3 h-3 rounded-full transition-all ${
-              index === currentIndex ? 'bg-white' : 'bg-white bg-opacity-50'
+            onClick={() => setCurrentIndex(index)}
+            className={`h-3 rounded-full transition-all duration-300 ${
+              index === currentIndex
+                ? "w-10 bg-green-400"
+                : "w-3 bg-white/50"
             }`}
-            aria-label={`Go to slide ${index + 1}`}
           />
         ))}
       </div>

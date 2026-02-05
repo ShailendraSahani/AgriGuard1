@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import AddServiceForm from '@/components/provider/AddServiceForm';
 import Modal from '@/components/ui/modal';
+import { NotificationPanel } from '@/components/notifications/NotificationPanel';
 
 interface Service {
   _id: string;
@@ -22,7 +23,7 @@ interface Booking {
   service?: {
     name: string;
   };
-  user?: {
+  farmer?: {
     name: string;
   };
   status: string;
@@ -52,7 +53,7 @@ export default function ProviderDashboard() {
     try {
       const [servicesRes, bookingsRes] = await Promise.all([
         fetch('/api/services'),
-        fetch('/api/bookings/my')
+        fetch('/api/bookings')
       ]);
 
       if (servicesRes.ok) {
@@ -62,7 +63,7 @@ export default function ProviderDashboard() {
 
       if (bookingsRes.ok) {
         const bookingsData = await bookingsRes.json();
-        setBookings(bookingsData.bookings || []);
+        setBookings(Array.isArray(bookingsData) ? bookingsData : []);
       }
     } catch (error) {
       console.error('Error fetching provider data:', error);
@@ -87,6 +88,11 @@ export default function ProviderDashboard() {
           <p className="mt-2 text-sm text-gray-600">
             Welcome back, {session.user?.name}! Manage your services and bookings.
           </p>
+        </div>
+
+        {/* Notifications Panel */}
+        <div className="mb-8">
+          <NotificationPanel />
         </div>
 
         {/* Quick Actions */}
@@ -206,7 +212,7 @@ export default function ProviderDashboard() {
                             {booking.service?.name}
                           </p>
                           <p className="text-sm text-gray-500">
-                            {booking.user?.name} • {new Date(booking.bookingDate).toLocaleDateString()}
+                            {booking.farmer?.name} • {new Date(booking.bookingDate).toLocaleDateString()}
                           </p>
                         </div>
                         <div className="text-right">

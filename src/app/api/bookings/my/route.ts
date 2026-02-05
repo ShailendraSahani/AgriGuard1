@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const bookings = await Booking.find({ farmer: (session.user as any)._id })
+    const bookings = await Booking.find({ farmer: session.user.id })
       .populate('service', 'name category price')
       .populate('provider', 'name email profile')
       .sort({ createdAt: -1 });

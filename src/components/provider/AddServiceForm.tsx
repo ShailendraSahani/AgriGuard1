@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 import {
   Card,
@@ -162,14 +163,20 @@ export default function AddServiceForm({ onSuccess, editingService }: AddService
 
                 <div>
                   <Label>Category</Label>
-                  <Input
-                    name="category"
-                    value={formData.category}
-                    onChange={handleChange}
-                    placeholder="Enter category"
-                    className="rounded-xl"
-                    required
-                  />
+                  <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })} required>
+                    <SelectTrigger className="rounded-xl">
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Tractor Rental">Tractor Rental</SelectItem>
+                      <SelectItem value="Harvesting">Harvesting</SelectItem>
+                      <SelectItem value="Irrigation Setup">Irrigation Setup</SelectItem>
+                      <SelectItem value="Seed Supply">Seed Supply</SelectItem>
+                      <SelectItem value="Soil Testing">Soil Testing</SelectItem>
+                      <SelectItem value="Drone Spray">Drone Spray</SelectItem>
+                      <SelectItem value="Labor Supply">Labor Supply</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
             </div>

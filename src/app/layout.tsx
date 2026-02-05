@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import "leaflet/dist/leaflet.css";
 import { Providers } from "@/components/Providers";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -20,6 +21,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "AgriGuard - Agriculture Platform",
   description: "Lease Land, Book Farming Services & Start Farming Online",
+  viewport: "width=device-width, initial-scale=1",
 };
 
 export default function RootLayout({

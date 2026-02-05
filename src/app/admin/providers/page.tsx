@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import { useSocket } from '@/contexts/SocketContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -23,9 +24,10 @@ interface User {
 export default function ProvidersPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const { socket } = useSocket();
   const [providers, setProviders] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+
 
   const fetchProviders = async () => {
     try {
@@ -50,6 +52,20 @@ export default function ProvidersPage() {
     fetchProviders();
   }, [session, status, router]);
 
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleDataUpdate = () => {
+      fetchProviders();
+    };
+
+    socket.on('dataUpdated', handleDataUpdate);
+
+    return () => {
+      socket.off('dataUpdated', handleDataUpdate);
+    };
+  }, [socket]);
+
   if (status === 'loading' || loading) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -70,7 +86,7 @@ export default function ProvidersPage() {
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-gray-900">Service Providers Management</h1>
         <div className="flex gap-2">
-          <Button onClick={() => setIsModalOpen(true)} className="bg-green-600 hover:bg-green-700">
+          <Button onClick={() => router.push('/admin/add-user')} className="bg-green-500 hover:bg-green-600">
             <Plus className="w-4 h-4 mr-2" />
             Add Provider
           </Button>
@@ -109,15 +125,7 @@ export default function ProvidersPage() {
         </CardContent>
       </Card>
 
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Add New Provider">
-        <AddUserForm
-          role="provider"
-          onSuccess={() => {
-            setIsModalOpen(false);
-            fetchProviders();
-          }}
-        />
-      </Modal>
+
     </motion.div>
   );
 }

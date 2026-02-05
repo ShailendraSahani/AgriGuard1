@@ -1,0 +1,37 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": { "state": "Delhi", "district": "New Delhi" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [77.07, 28.54],
+            [77.33, 28.54],
+            [77.33, 28.73],
+            [77.07, 28.73],
+            [77.07, 28.54]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "state": "Maharashtra", "district": "Pune" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [73.65, 18.40],
+            [74.05, 18.40],
+            [74.05, 18.80],
+            [73.65, 18.80],
+            [73.65, 18.40]
+          ]
+        ]
+      }
+    }
+  ]
+}

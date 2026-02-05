@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import connectDB from '@/lib/db';
+import dbConnect from '@/lib/db';
 import Service from '@/models/Service';
 
 interface SessionUser {
@@ -19,8 +19,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    await connectDB();
-
+    await dbConnect();
     const services = await Service.find().populate('provider', 'name email');
     return NextResponse.json(services);
   } catch (error) {
@@ -43,7 +42,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    await connectDB();
+    await dbConnect();
 
     const body = await request.json();
     const { name, category, price, serviceArea, availabilityDates, description, provider } = body;

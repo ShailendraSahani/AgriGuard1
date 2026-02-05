@@ -2,7 +2,7 @@
 
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useSocket } from '@/contexts/SocketContext';
 
 interface Booking {
@@ -11,16 +11,19 @@ interface Booking {
     name: string;
     category: string;
   };
-  user: {
+  farmer: {
     name: string;
     email: string;
-    contact: string;
+    profile?: {
+      contact?: string;
+    };
   };
   provider: {
     _id: string;
-  };
+  } | string;
   status: string;
   bookingDate: string;
+  workStartDate?: string;
   totalAmount: number;
   createdAt: string;
   notes?: string;
@@ -33,6 +36,17 @@ export default function ProviderBookings() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
+  const [calendarMonth, setCalendarMonth] = useState(new Date());
+
+  const bookingsByDate = useMemo(() => {
+    const map: Record<string, number> = {};
+    bookings.forEach((booking) => {
+      const dateValue = booking.workStartDate || booking.bookingDate;
+      const key = new Date(dateValue).toISOString().split('T')[0];
+      map[key] = (map[key] || 0) + 1;
+    });
+    return map;
+  }, [bookings]);
 
   useEffect(() => {
     if (status === 'loading') return;
@@ -47,8 +61,9 @@ export default function ProviderBookings() {
     if (!socket) return;
 
     const handleBookingCreated = (booking: Booking) => {
-      // Add new booking to the list if it's for this provider
-      if (booking.provider._id === session?.user?.id) {
+      const providerId =
+        typeof booking.provider === 'string' ? booking.provider : booking.provider._id;
+      if (providerId === session?.user?.id) {
         setBookings(prev => [booking, ...prev]);
       }
     };
@@ -71,10 +86,10 @@ export default function ProviderBookings() {
 
   const fetchBookings = async () => {
     try {
-      const res = await fetch('/api/bookings/my');
+      const res = await fetch('/api/bookings');
       if (res.ok) {
         const data = await res.json();
-        setBookings(data.bookings || []);
+        setBookings(Array.isArray(data) ? data : []);
       }
     } catch (error) {
       console.error('Error fetching bookings:', error);
@@ -111,6 +126,12 @@ export default function ProviderBookings() {
     return booking.status === filter;
   });
 
+  const monthLabel = calendarMonth.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+  const monthStart = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth(), 1);
+  const monthEnd = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 0);
+  const startDay = monthStart.getDay();
+  const daysInMonth = monthEnd.getDate();
+
   if (status === 'loading' || loading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
@@ -129,6 +150,64 @@ export default function ProviderBookings() {
               <p className="mt-2 text-sm text-gray-600">
                 Manage your service bookings and customer requests.
               </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Calendar View */}
+        <div className="mb-8 bg-white shadow rounded-lg p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-gray-900">Booking Calendar</h2>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1, 1))}
+                className="px-3 py-1 rounded-md border border-gray-300 text-sm hover:bg-gray-50"
+              >
+                Prev
+              </button>
+              <div className="text-sm font-medium text-gray-700">{monthLabel}</div>
+              <button
+                onClick={() => setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1))}
+                className="px-3 py-1 rounded-md border border-gray-300 text-sm hover:bg-gray-50"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+          <div className="grid grid-cols-7 gap-2 text-center text-xs text-gray-500 mb-2">
+            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+              <div key={day}>{day}</div>
+            ))}
+          </div>
+          <div className="grid grid-cols-7 gap-2">
+            {Array.from({ length: startDay }).map((_, i) => (
+              <div key={`empty-${i}`} className="h-10" />
+            ))}
+            {Array.from({ length: daysInMonth }).map((_, i) => {
+              const date = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth(), i + 1);
+              const key = date.toISOString().split('T')[0];
+              const count = bookingsByDate[key] || 0;
+              return (
+                <div
+                  key={key}
+                  className={`h-10 rounded-md flex items-center justify-center text-sm font-medium ${
+                    count > 0 ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-500'
+                  }`}
+                  title={count > 0 ? `${count} booking(s)` : 'No bookings'}
+                >
+                  {i + 1}
+                </div>
+              );
+            })}
+          </div>
+          <div className="mt-4 flex gap-4 text-xs text-gray-600">
+            <div className="flex items-center gap-2">
+              <span className="h-3 w-3 rounded-sm bg-green-100 border border-green-200" />
+              Booked
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="h-3 w-3 rounded-sm bg-gray-100 border border-gray-200" />
+              Available
             </div>
           </div>
         </div>
@@ -203,8 +282,8 @@ export default function ProviderBookings() {
                             </span>
                           </div>
                           <div className="mt-1 text-sm text-gray-600">
-                            <p>Customer: {booking.user.name} ({booking.user.email})</p>
-                            <p>Contact: {booking.user.contact}</p>
+                            <p>Customer: {booking.farmer.name} ({booking.farmer.email})</p>
+                            <p>Contact: {booking.farmer.profile?.contact || 'N/A'}</p>
                           </div>
                         </div>
                       </div>

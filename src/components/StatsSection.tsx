@@ -67,7 +67,7 @@ export function StatsSection() {
   if (isLoading) {
     return (
       <section className="py-20 bg-gradient-to-br from-green-50 to-yellow-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full px-4">
           <div className="text-center">
             <motion.div
               className="animate-spin rounded-full h-16 w-16 border-4 border-green-700 border-t-yellow-700 mx-auto"
@@ -82,7 +82,7 @@ export function StatsSection() {
 
   return (
     <section ref={ref} className="py-20 bg-gradient-to-br from-green-50 to-yellow-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full px-4">
         <motion.div
           className="text-center mb-16"
           initial={{ opacity: 0, y: 30 }}

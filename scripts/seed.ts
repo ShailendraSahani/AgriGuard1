@@ -1,11 +1,12 @@
-const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
-const User = require('../src/models/User');
-const Land = require('../src/models/Land');
-const Service = require('../src/models/Service');
-const Package = require('../src/models/Package');
-const Booking = require('../src/models/Booking');
-const LeaseRequest = require('../src/models/LeaseRequest');
+import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs';
+import User from '../src/models/User';
+import Land from '../src/models/Land';
+import Service from '../src/models/Service';
+import Package from '../src/models/Package';
+import Booking from '../src/models/Booking';
+import LeaseRequest from '../src/models/LeaseRequest';
+import Slot from '../src/models/Slot';
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/agriguard';
 
@@ -129,20 +130,26 @@ async function seedDatabase() {
     // Create services
     const service1 = new Service({
       name: 'Tractor Plowing Service',
-      category: 'Plowing',
+      category: 'Tractor Rental',
       price: 2000,
       serviceArea: 'Punjab',
-      availabilityDates: [new Date('2024-02-01'), new Date('2024-02-15')],
+      availabilityDates: {
+        start: new Date('2024-02-01'),
+        end: new Date('2024-02-15')
+      },
       description: 'Professional tractor plowing service for farmland preparation',
       provider: provider1._id
     });
 
     const service2 = new Service({
       name: 'Crop Spraying Service',
-      category: 'Pest Control',
+      category: 'Drone Spray',
       price: 1500,
       serviceArea: 'Haryana',
-      availabilityDates: [new Date('2024-02-05'), new Date('2024-02-20')],
+      availabilityDates: {
+        start: new Date('2024-02-05'),
+        end: new Date('2024-02-20')
+      },
       description: 'Expert crop spraying and pest control services',
       provider: provider2._id
     });

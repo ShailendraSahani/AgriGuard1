@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import connectDB from '@/lib/db';
 import Package from '@/models/Package';
+import { getSocketServer } from '@/lib/globalSocket';
 
 interface SessionUser {
   role: string;
@@ -26,25 +27,75 @@ export async function PUT(
 
     const { id } = await params;
     const body = await request.json();
-    const { name, crop, duration, price, features, description, provider, isActive } = body;
+    const {
+      name,
+      planType,
+      crop,
+      durationDays,
+      price,
+      discountPrice,
+      isPopular,
+      features,
+      limits,
+      aiModules,
+      notifications,
+      satelliteMonitoring,
+      support,
+      marketplaceAccess,
+      benefits,
+      provider,
+      isActive,
+    } = body;
 
     const updateData: Partial<{
       name: string;
+      planType: string;
       crop: string;
-      duration: string;
+      durationDays: number;
       price: number;
+      discountPrice: number;
+      isPopular: boolean;
       features: string[];
-      description: string;
+      limits: {
+        maxBookings?: number;
+        maxReports?: number;
+        maxLandArea?: number;
+        expertCalls?: number;
+      };
+      aiModules: {
+        diseaseDetection?: boolean;
+        pestPrediction?: boolean;
+        yieldForecast?: boolean;
+        irrigationAI?: boolean;
+      };
+      notifications: {
+        sms?: boolean;
+        whatsapp?: boolean;
+        email?: boolean;
+      };
+      satelliteMonitoring?: boolean;
+      support?: string;
+      marketplaceAccess?: boolean;
+      benefits?: string[];
       provider: string;
       isActive: boolean;
     }> = {};
 
     if (name !== undefined) updateData.name = name;
+    if (planType !== undefined) updateData.planType = planType;
     if (crop !== undefined) updateData.crop = crop;
-    if (duration !== undefined) updateData.duration = duration;
+    if (durationDays !== undefined) updateData.durationDays = durationDays;
     if (price !== undefined) updateData.price = price;
+    if (discountPrice !== undefined) updateData.discountPrice = discountPrice;
+    if (isPopular !== undefined) updateData.isPopular = isPopular;
     if (features !== undefined) updateData.features = features;
-    if (description !== undefined) updateData.description = description;
+    if (limits !== undefined) updateData.limits = limits;
+    if (aiModules !== undefined) updateData.aiModules = aiModules;
+    if (notifications !== undefined) updateData.notifications = notifications;
+    if (satelliteMonitoring !== undefined) updateData.satelliteMonitoring = satelliteMonitoring;
+    if (support !== undefined) updateData.support = support;
+    if (marketplaceAccess !== undefined) updateData.marketplaceAccess = marketplaceAccess;
+    if (benefits !== undefined) updateData.benefits = benefits;
     if (provider !== undefined) updateData.provider = provider;
     if (isActive !== undefined) updateData.isActive = isActive;
 
@@ -58,6 +109,10 @@ export async function PUT(
       );
     }
 
+    const io = getSocketServer();
+    if (io) {
+      io.emit('packages-updated');
+    }
     return NextResponse.json(pkg);
   } catch (error) {
     console.error('Error updating package:', error);
@@ -95,6 +150,10 @@ export async function DELETE(
       );
     }
 
+    const io = getSocketServer();
+    if (io) {
+      io.emit('packages-updated');
+    }
     return NextResponse.json({ message: 'Package deleted successfully' });
   } catch (error) {
     console.error('Error deleting package:', error);

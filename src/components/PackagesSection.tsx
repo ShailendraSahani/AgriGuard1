@@ -12,11 +12,14 @@ import useSWR from 'swr';
 interface Package {
   _id: string;
   name: string;
+  planType: string;
   crop: string;
-  duration: string;
+  durationDays: number;
   price: number;
+  discountPrice?: number;
+  isPopular?: boolean;
   features: string[];
-  description: string;
+  benefits?: string[];
   provider: {
     name: string;
   };
@@ -36,9 +39,9 @@ export function PackagesSection() {
   );
 
   if (isLoading) {
-    return (
-      <section className="py-20 bg-gradient-to-br from-green-50 to-yellow-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+  return (
+    <section className="py-20 bg-gradient-to-br from-green-50 to-yellow-50">
+      <div className="w-full px-4">
           <div className="text-center">
             <motion.div
               className="animate-spin rounded-full h-16 w-16 border-4 border-green-700 border-t-yellow-700 mx-auto"
@@ -53,7 +56,7 @@ export function PackagesSection() {
 
   return (
     <section className="py-20 bg-gradient-to-br from-green-50 to-yellow-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full px-4">
         <motion.div
           className="text-center mb-16"
           initial={{ opacity: 0, y: 30 }}
@@ -98,10 +101,15 @@ export function PackagesSection() {
             >
               <PackageCard
                 name={pkg.name}
+                planType={pkg.planType}
                 crop={pkg.crop}
-                duration={pkg.duration}
-                price={`₹${pkg.price}`}
+                durationDays={pkg.durationDays}
+                price={pkg.price}
+                discountPrice={pkg.discountPrice}
+                isPopular={pkg.isPopular}
                 features={pkg.features}
+                benefits={pkg.benefits}
+                onSubscribe={() => {}}
               />
             </motion.div>
           ))}

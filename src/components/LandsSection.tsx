@@ -92,7 +92,7 @@ export function LandsSection() {
       <div className="absolute top-0 left-0 w-72 h-72 bg-green-200/40 blur-3xl rounded-full" />
       <div className="absolute bottom-0 right-0 w-72 h-72 bg-yellow-200/40 blur-3xl rounded-full" />
 
-      <div className="max-w-7xl mx-auto px-6 relative z-10">
+      <div className="max-w-7xl mx-auto px-4 relative z-10">
 
         {/* ================================
             ✅ HEADING + SEARCH

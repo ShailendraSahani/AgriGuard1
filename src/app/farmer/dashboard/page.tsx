@@ -26,6 +26,7 @@ interface LeaseRequest {
 export default function FarmerDashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const { socket } = useSocket();
   const [activeTab, setActiveTab] = useState('lands');
   const [lands, setLands] = useState<Land[]>([]);
   const [leaseRequests, setLeaseRequests] = useState<LeaseRequest[]>([]);
@@ -57,6 +58,19 @@ export default function FarmerDashboard() {
     }
     fetchData();
   }, [session, status, fetchData]);
+
+  useEffect(() => {
+    if (socket && session?.user?.id) {
+      socket.on('lease-request', (data) => {
+        console.log('New lease request received:', data);
+        fetchData(); // Refresh lease requests
+      });
+
+      return () => {
+        socket.off('lease-request');
+      };
+    }
+  }, [socket, session?.user?.id, fetchData]);
 
   const handleAcceptReject = async (requestId: string, status: string) => {
     try {

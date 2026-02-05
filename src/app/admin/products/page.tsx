@@ -9,23 +9,20 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { PDFExport } from '@/components/admin/PDFExport';
-import { Package, Plus } from 'lucide-react';
+import { Package, Plus, Pencil, Trash2 } from 'lucide-react';
 import Modal from '@/components/ui/modal';
 import AddPackageForm from '@/components/admin/AddPackageForm';
-
-interface PackageItem {
-  _id: string;
-  name: string;
-  crop: string;
-  price: number;
-}
+import { useSocket } from '@/contexts/SocketContext';
+import { IPackage } from '@/models/Package';
 
 export default function ProductsPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [packages, setPackages] = useState<PackageItem[]>([]);
+  const { socket } = useSocket();
+  const [packages, setPackages] = useState<Partial<IPackage>[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingPackage, setEditingPackage] = useState<Partial<IPackage> | undefined>(undefined);
 
   const fetchPackages = async () => {
     try {
@@ -40,6 +37,12 @@ export default function ProductsPage() {
     }
   };
 
+  const handleDelete = async (id: string) => {
+    if (!confirm('Delete this package?')) return;
+    const res = await fetch(`/api/admin/packages/${id}`, { method: 'DELETE' });
+    if (res.ok) fetchPackages();
+  };
+
   useEffect(() => {
     if (status === 'loading') return;
     if (!session || (session.user as { role: string })?.role !== 'admin') {
@@ -48,6 +51,15 @@ export default function ProductsPage() {
     }
     fetchPackages();
   }, [session, status, router]);
+
+  useEffect(() => {
+    if (!socket) return;
+    const refresh = () => fetchPackages();
+    socket.on('packages-updated', refresh);
+    return () => {
+      socket.off('packages-updated', refresh);
+    };
+  }, [socket]);
 
   if (status === 'loading' || loading) {
     return (
@@ -83,19 +95,51 @@ export default function ProductsPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
+                <TableHead>Plan</TableHead>
                 <TableHead>Crop</TableHead>
+                <TableHead>Duration</TableHead>
                 <TableHead>Price</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {packages.map(pkg => (
-                <TableRow key={pkg._id}>
+                <TableRow key={pkg._id?.toString()}>
                   <TableCell className="font-medium">{pkg.name}</TableCell>
+                  <TableCell>{pkg.planType || 'FREE'}</TableCell>
                   <TableCell>{pkg.crop}</TableCell>
+                  <TableCell>{pkg.durationDays ? `${pkg.durationDays} days` : '-'}</TableCell>
                   <TableCell>₹{pkg.price}</TableCell>
                   <TableCell>
-                    <Badge variant="default">Active</Badge>
+                    <Badge variant={pkg.isActive ? 'default' : 'secondary'}>
+                      {pkg.isActive ? 'Active' : 'Inactive'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setEditingPackage(pkg);
+                          setIsModalOpen(true);
+                        }}
+                        className="border-yellow-500 text-yellow-700 hover:bg-yellow-50"
+                      >
+                        <Pencil className="h-4 w-4 mr-1" />
+                        Edit
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => handleDelete(pkg._id?.toString() || '')}
+                        className="bg-green-600 hover:bg-green-700"
+                      >
+                        <Trash2 className="h-4 w-4 mr-1" />
+                        Delete
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -104,10 +148,32 @@ export default function ProductsPage() {
         </CardContent>
       </Card>
 
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Add New Package">
+      <div className="flex justify-end">
+        <Button
+          onClick={() => {
+            setEditingPackage(undefined);
+            setIsModalOpen(true);
+          }}
+          className="bg-green-600 hover:bg-yellow-500"
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Add Package
+        </Button>
+      </div>
+
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setEditingPackage(undefined);
+        }}
+        title={editingPackage ? 'Edit Package' : 'Add New Package'}
+      >
         <AddPackageForm
+          initialData={editingPackage}
           onSuccess={() => {
             setIsModalOpen(false);
+            setEditingPackage(undefined);
             fetchPackages();
           }}
         />

@@ -4,14 +4,13 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import { useSocket } from '@/contexts/SocketContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { PDFExport } from '@/components/admin/PDFExport';
-import { Users, Plus } from 'lucide-react';
-import Modal from '@/components/ui/modal';
-import AddUserForm from '@/components/admin/AddUserForm';
+import { MapPin, Plus } from 'lucide-react';
 
 interface User {
   _id: string;
@@ -23,9 +22,9 @@ interface User {
 export default function FarmersPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const { socket } = useSocket();
   const [farmers, setFarmers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const fetchFarmers = async () => {
     try {
@@ -50,6 +49,20 @@ export default function FarmersPage() {
     fetchFarmers();
   }, [session, status, router]);
 
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleDataUpdate = () => {
+      fetchFarmers();
+    };
+
+    socket.on('dataUpdated', handleDataUpdate);
+
+    return () => {
+      socket.off('dataUpdated', handleDataUpdate);
+    };
+  }, [socket]);
+
   if (status === 'loading' || loading) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -70,7 +83,7 @@ export default function FarmersPage() {
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-gray-900">Farmers Management</h1>
         <div className="flex gap-2">
-          <Button onClick={() => setIsModalOpen(true)} className="bg-green-600 hover:bg-green-700">
+          <Button onClick={() => router.push('/admin/add-user')} className="bg-yellow-500 hover:bg-yellow-600">
             <Plus className="w-4 h-4 mr-2" />
             Add Farmer
           </Button>
@@ -81,7 +94,7 @@ export default function FarmersPage() {
       <Card className="rounded-2xl shadow-lg">
         <CardHeader>
           <CardTitle className="text-green-600 flex items-center gap-2">
-            <Users className="w-5 h-5" />
+            <MapPin className="w-5 h-5" />
             Farmers ({farmers.length})
           </CardTitle>
         </CardHeader>
@@ -108,16 +121,6 @@ export default function FarmersPage() {
           </Table>
         </CardContent>
       </Card>
-
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Add New Farmer">
-        <AddUserForm
-          role="farmer"
-          onSuccess={() => {
-            setIsModalOpen(false);
-            fetchFarmers();
-          }}
-        />
-      </Modal>
     </motion.div>
   );
 }

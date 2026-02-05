@@ -4,11 +4,20 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
+import { LandMapViewer } from '@/components/land/LandMapViewer';
 
 interface Land {
   _id: string;
   title: string;
   location: { state: string; district: string; village: string };
+  geometry?: {
+    type: 'Polygon';
+    coordinates: number[][][];
+  };
+  centroid?: {
+    type: 'Point';
+    coordinates: number[];
+  };
   size: { value: number; unit: string };
   soilType: string;
   waterAvailability: string;
@@ -68,7 +77,12 @@ export default function LandDetails() {
 
       if (response.ok) {
         alert('Lease request submitted successfully!');
-        router.push('/user/dashboard');
+        // Redirect based on user role
+        if (session.user.role === 'farmer') {
+          router.push('/farmer/dashboard');
+        } else {
+          router.push('/lands'); // Redirect users back to lands page
+        }
       } else {
         const error = await response.json();
         alert(`Failed to submit request: ${error.error}`);
@@ -147,6 +161,13 @@ export default function LandDetails() {
                 </div>
               </div>
             </div>
+
+            {land.geometry?.coordinates?.length ? (
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold mb-3">Land Boundary Map</h3>
+                <LandMapViewer geometry={land.geometry} centroid={land.centroid} />
+              </div>
+            ) : null}
 
             {/* Description */}
             {land.description && (

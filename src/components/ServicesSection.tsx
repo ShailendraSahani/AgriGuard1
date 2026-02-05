@@ -1,306 +1,270 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
-import { motion } from "framer-motion";
-import {
-  Search,
-  User,
-  IndianRupee,
-  Tag,
-  Star,
-  ArrowRight,
-  X,
-} from "lucide-react";
+import AddServiceForm from "@/components/provider/AddServiceForm";
 
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-} from "@/components/ui/card";
-
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { useSocket } from "@/contexts/SocketContext";
-
-/* ---------------- TYPES ---------------- */
 interface Service {
   _id: string;
   name: string;
-  description: string;
-  price: number;
   category: string;
-  provider?: {
-    name: string;
+  price: number;
+  serviceArea: string;
+  availabilityDates: {
+    start: string;
+    end: string;
   };
-  rating?: number;
-  reviews?: number;
+  description: string;
+  provider: {
+    name: string;
+    email: string;
+    profile?: {
+      location?: string;
+      contact?: string;
+    };
+  };
 }
 
-/* ---------------- FETCHER ---------------- */
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
-
-/* ---------------- SKELETON LOADER ---------------- */
-function ServiceSkeleton() {
-  return (
-    <div className="rounded-3xl border border-green-200 bg-white shadow-lg p-8 animate-pulse space-y-4">
-      <div className="h-6 w-2/3 bg-gray-200 rounded-lg"></div>
-      <div className="h-4 w-1/3 bg-gray-200 rounded-lg"></div>
-      <div className="h-16 w-full bg-gray-200 rounded-xl"></div>
-      <div className="flex justify-between">
-        <div className="h-6 w-20 bg-gray-200 rounded-lg"></div>
-        <div className="h-6 w-24 bg-gray-200 rounded-lg"></div>
-      </div>
-      <div className="h-12 w-full bg-gray-200 rounded-2xl"></div>
-    </div>
-  );
-}
-
-/* ---------------- MODAL POPUP ---------------- */
-function ServiceModal({
-  service,
-  onClose,
-}: {
-  service: Service;
-  onClose: () => void;
-}) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md">
-      <motion.div
-        initial={{ scale: 0.8, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 0.3 }}
-        className="bg-white rounded-3xl shadow-2xl max-w-lg w-full p-8 relative"
-      >
-        {/* CLOSE */}
-        <button
-          onClick={onClose}
-          className="absolute top-5 right-5 text-gray-500 hover:text-red-500"
-          aria-label="Close modal"
-        >
-          <X className="h-6 w-6" />
-        </button>
-
-        {/* CONTENT */}
-        <h2 className="text-3xl font-extrabold text-green-800">
-          {service.name}
-        </h2>
-
-        <p className="mt-3 text-gray-600 leading-relaxed">
-          {service.description}
-        </p>
-
-        {/* CATEGORY */}
-        <div className="flex items-center gap-2 mt-4 text-green-600 font-medium">
-          <Tag className="h-4 w-4" />
-          {service.category}
-        </div>
-
-        {/* RATING */}
-        <div className="flex items-center gap-2 mt-5">
-          <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
-          <span className="font-bold text-gray-800">
-            {service.rating || 4.5}
-          </span>
-          <span className="text-gray-500 text-sm">
-            ({service.reviews || 120} Reviews)
-          </span>
-        </div>
-
-        {/* PRICE */}
-        <div className="mt-6 flex items-center gap-2 text-2xl font-extrabold text-green-700">
-          <IndianRupee className="h-6 w-6" />
-          {service.price}
-        </div>
-
-        {/* PROVIDER */}
-        <p className="mt-2 text-gray-500">
-          Provider:{" "}
-          <span className="font-semibold">
-            {service.provider?.name || "Unknown"}
-          </span>
-        </p>
-
-        {/* ACTION */}
-        <Link href={`/services/${service._id}`} className="block mt-8">
-          <Button className="w-full rounded-2xl py-6 text-lg font-bold bg-gradient-to-r from-green-600 to-yellow-500 shadow-lg hover:opacity-90">
-            Book Now 🚜
-          </Button>
-        </Link>
-      </motion.div>
-    </div>
-  );
-}
-
-/* ---------------- MAIN COMPONENT ---------------- */
 export function ServicesSection() {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedService, setSelectedService] = useState<Service | null>(null);
+  const { data: session, status } = useSession();
+
   const [services, setServices] = useState<Service[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
 
-  const { socket } = useSocket();
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [searchArea, setSearchArea] = useState("");
 
-  // Initial data fetch
-  useEffect(() => {
-    const fetchServices = async () => {
-      try {
-        const data = await fetcher("/api/services/available?limit=6");
-        setServices(Array.isArray(data) ? data : []);
-      } catch (error) {
-        console.error("Failed to fetch services:", error);
-      } finally {
-        setIsLoading(false);
+  const categories = [
+    "Tractor Rental",
+    "Harvesting",
+    "Irrigation Setup",
+    "Seed Supply",
+    "Soil Testing",
+    "Drone Spray",
+    "Labor Supply",
+  ];
+
+  const categoryIcons: { [key: string]: string } = {
+    "Tractor Rental": "🚜",
+    "Harvesting": "🌾",
+    "Irrigation Setup": "💧",
+    "Seed Supply": "🌱",
+    "Soil Testing": "🧪",
+    "Drone Spray": "🚁",
+    "Labor Supply": "👷",
+  };
+
+  const userRole = (session?.user as any)?.role;
+
+  // Fetch Services
+  const fetchServices = async () => {
+    try {
+      const params = new URLSearchParams();
+      if (selectedCategory) params.append("category", selectedCategory);
+      if (searchArea) params.append("area", searchArea);
+
+      const response = await fetch(`/api/services/available?${params}`);
+      if (response.ok) {
+        const data = await response.json();
+        setServices(data);
       }
-    };
+    } catch (error) {
+      console.error("Failed to fetch services:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchServices();
-  }, []);
+  const fetchProviderServices = async () => {
+    try {
+      const response = await fetch("/api/services");
+      if (response.ok) {
+        const data = await response.json();
+        setServices(data || []);
+      }
+    } catch (error) {
+      console.error("Failed provider services:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // Socket event listeners for real-time updates
   useEffect(() => {
-    if (!socket) return;
+    if (status === "loading") return;
 
-    const handleServicesUpdate = (data: any) => {
-      console.log("Services updated:", data);
-      // Refresh services data
-      fetcher("/api/services/available?limit=6").then((newData) => {
-        setServices(Array.isArray(newData) ? newData : []);
-      });
-    };
+    if (userRole === "provider") {
+      fetchProviderServices();
+    } else {
+      fetchServices();
+    }
+  }, [session, status]);
 
-    socket.on('services-updated', handleServicesUpdate);
+  useEffect(() => {
+    fetchServices();
+  }, [selectedCategory, searchArea]);
 
-    return () => {
-      socket.off('services-updated', handleServicesUpdate);
-    };
-  }, [socket]);
+  // Delete Service
+  const handleDeleteService = async (serviceId: string) => {
+    if (!confirm("Are you sure?")) return;
 
-  const filteredServices = services.filter(
-    (service) =>
-      service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (service.category &&
-        service.category.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+    await fetch(`/api/services/${serviceId}`, {
+      method: "DELETE",
+    });
+
+    fetchProviderServices();
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-lg font-semibold text-green-600">
+        Loading Services...
+      </div>
+    );
+  }
 
   return (
-    <section className="py-24 bg-gradient-to-br from-green-50 via-white to-yellow-50">
-      <div className="max-w-7xl mx-auto px-6">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-100">
+      <div className="w-full py-10 px-4">
 
-        {/* HEADER */}
-        <div className="text-center mb-20">
-          <h2 className="text-5xl font-extrabold text-green-800">
-            🌱 Farming Services
-          </h2>
-
-          <p className="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">
-            Verified farming services with premium booking experience.
+        {/* Header */}
+        <div className="mb-10 text-center">
+          <h1 className="text-4xl font-extrabold text-green-700">
+            🌱 Available Services
+          </h1>
+          <p className="mt-3 text-gray-600 max-w-xl mx-auto">
+            Browse and book verified farming services from trusted providers.
           </p>
+        </div>
 
-          {/* SEARCH */}
-          <div className="mt-10 max-w-xl mx-auto relative">
-            <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-green-400" />
+        {/* Provider Add Form */}
+        {userRole === "provider" && (
+          <div className="mb-10 bg-white border border-green-200 rounded-3xl shadow-lg p-8">
+            <h2 className="text-xl font-bold text-green-700 mb-4">
+              ➕ Add New Service
+            </h2>
+            <AddServiceForm onSuccess={() => fetchProviderServices()} />
+          </div>
+        )}
 
-            <Input
-              placeholder="Search services..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-14 py-6 rounded-2xl border border-green-200 shadow-md bg-white/80 backdrop-blur-md focus:ring-4 focus:ring-green-300"
-            />
+        {/* Filters */}
+        <div className="mb-10 bg-white border border-green-200 rounded-3xl shadow-md p-6">
+          <h3 className="text-lg font-semibold text-green-700 mb-4">
+            🔍 Filter Services
+          </h3>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Category */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Category
+              </label>
+
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="mt-2 w-full rounded-xl border border-green-300 px-4 py-3 shadow-sm focus:ring-2 focus:ring-green-500"
+                aria-label="Select service category"
+              >
+                <option value="">All Categories</option>
+                {categories.map((cat) => (
+                  <option key={cat}>{cat}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Location */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Service Area
+              </label>
+
+              <input
+                value={searchArea}
+                onChange={(e) => setSearchArea(e.target.value)}
+                placeholder="Enter location..."
+                className="mt-2 w-full rounded-xl border border-green-300 px-4 py-3 shadow-sm focus:ring-2 focus:ring-green-500"
+              />
+            </div>
           </div>
         </div>
 
-        {/* GRID */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-          {isLoading
-            ? Array.from({ length: 6 }).map((_, i) => (
-                <ServiceSkeleton key={i} />
-              ))
-            : filteredServices.slice(0, 6).map((service, index) => (
-                <motion.div
-                  key={service._id}
-                  whileHover={{ scale: 1.04 }}
-                  transition={{ duration: 0.3 }}
+        {/* Services Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {services.map((service) => (
+            <div
+              key={service._id}
+              className="bg-gradient-to-br from-white to-green-50 border border-green-500 rounded-3xl shadow-lg hover:shadow-2xl hover:shadow-green-500/50 hover:scale-105 transition-all duration-500 overflow-hidden group animate-fade-in"
+            >
+              <div className="p-8 space-y-5">
+
+                {/* Title + Category */}
+                <div className="flex justify-between items-start">
+                  <h3 className="text-2xl font-extrabold text-gray-800 group-hover:text-green-700 transition-colors duration-300 leading-tight">
+                    {service.name}
+                  </h3>
+
+                  <span className="px-4 py-2 rounded-full text-sm font-bold bg-gradient-to-r from-green-100 to-green-200 text-green-800 shadow-sm">
+                    {categoryIcons[service.category]} {service.category}
+                  </span>
+                </div>
+
+                {/* Description */}
+                <p className="text-base text-gray-600 line-clamp-3 leading-relaxed">
+                  {service.description}
+                </p>
+
+                {/* Price + Area */}
+                <div className="flex justify-between items-center">
+                  <span className="text-3xl font-black text-green-700 drop-shadow-sm">
+                    ₹{service.price}
+                  </span>
+                  <span className="text-base text-gray-500 font-medium">
+                    📍 {service.serviceArea}
+                  </span>
+                </div>
+
+                {/* Provider */}
+                <div className="text-base text-gray-600 space-y-1">
+                  <p className="flex items-center">
+                    <span className="font-semibold text-gray-800 mr-2">👤</span>
+                    Provider: <span className="font-bold text-gray-900 ml-1">{service.provider?.name}</span>
+                  </p>
+                  {service.provider?.profile?.contact && (
+                    <p className="flex items-center">
+                      <span className="mr-2">📞</span>
+                      {service.provider.profile.contact}
+                    </p>
+                  )}
+                </div>
+
+                {/* Availability */}
+                <p className="text-sm text-gray-500 bg-gray-50 px-3 py-2 rounded-lg">
+                  <span className="font-medium">📅 Available:</span>{" "}
+                  {service.availabilityDates?.start ? new Date(service.availabilityDates.start).toLocaleDateString() : 'N/A'}{" "}
+                  -{" "}
+                  {service.availabilityDates?.end ? new Date(service.availabilityDates.end).toLocaleDateString() : 'N/A'}
+                </p>
+
+                {/* Action Button */}
+                <Link
+                  href={`/services/${service._id}`}
+                  className="block w-full text-center py-4 rounded-2xl bg-gradient-to-r from-green-500 to-yellow-500 text-white font-bold hover:from-green-600 hover:to-yellow-600 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
                 >
-                  {/* CARD WITH ANIMATED BORDER */}
-                  <div className="p-[2px] rounded-3xl bg-gradient-to-r from-green-400 via-yellow-400 to-green-400">
-                    <Card className="rounded-3xl bg-white shadow-lg overflow-hidden">
-                      <CardHeader className="p-8">
-                        <h3 className="text-2xl font-bold text-green-800">
-                          {service.name}
-                        </h3>
-
-                        <div className="flex items-center gap-2 text-sm text-green-600 mt-2">
-                          <Tag className="h-4 w-4" />
-                          {service.category}
-                        </div>
-                      </CardHeader>
-
-                      <CardContent className="px-8 space-y-4">
-                        <p className="text-gray-600 line-clamp-3">
-                          {service.description}
-                        </p>
-
-                        {/* RATING */}
-                        <div className="flex items-center gap-1">
-                          <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
-                          <span className="font-bold">
-                            {service.rating || 4.5}
-                          </span>
-                          <span className="text-gray-400 text-sm">
-                            ({service.reviews || 120})
-                          </span>
-                        </div>
-
-                        {/* PRICE */}
-                        <div className="flex justify-between items-center">
-                          <div className="flex items-center gap-1 text-xl font-extrabold text-green-700">
-                            <IndianRupee className="h-5 w-5" />
-                            {service.price}
-                          </div>
-
-                          <div className="flex items-center text-gray-500 text-sm gap-1">
-                            <User className="h-4 w-4" />
-                            {service.provider?.name || "Unknown"}
-                          </div>
-                        </div>
-                      </CardContent>
-
-                      <CardFooter className="p-8 flex gap-3">
-                        <Button
-                          variant="outline"
-                          className="w-1/2 rounded-2xl border-green-300 text-green-700"
-                          onClick={() => setSelectedService(service)}
-                        >
-                          Details
-                        </Button>
-
-                        <Link
-                          href={`/services/${service._id}`}
-                          className="w-1/2"
-                        >
-                          <Button className="w-full rounded-2xl bg-gradient-to-r from-green-600 to-yellow-500 text-white font-bold">
-                            Book <ArrowRight className="h-4 w-4 ml-1" />
-                          </Button>
-                        </Link>
-                      </CardFooter>
-                    </Card>
-                  </div>
-                </motion.div>
-              ))}
+                  🚜 Book Service
+                </Link>
+              </div>
+            </div>
+          ))}
         </div>
 
-        {/* MODAL */}
-        {selectedService && (
-          <ServiceModal
-            service={selectedService}
-            onClose={() => setSelectedService(null)}
-          />
+        {/* Empty */}
+        {services.length === 0 && (
+          <p className="text-center mt-12 text-gray-500 font-medium">
+            No services found 🚫
+          </p>
         )}
       </div>
-
-
-    </section>
+    </div>
   );
 }

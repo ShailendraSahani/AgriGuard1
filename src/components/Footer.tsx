@@ -67,21 +67,21 @@ export function Footer() {
   };
 
   return (
-    <footer className="relative overflow-hidden bg-gradient-to-br from-green-900 via-green-950 to-black text-white">
+    <footer className="relative overflow-hidden bg-gradient-to-r from-green-500 to-yellow-500 text-white">
       {/* 🌟 Floating Gradient Blobs */}
       <motion.div
-        className="absolute top-[-120px] left-[-120px] w-[320px] h-[320px] bg-green-400/30 rounded-full blur-[120px]"
+        className="absolute top-[-120px] left-[-120px] w-[320px] h-[320px] bg-green-500/30 rounded-full blur-[120px]"
         animate={{ scale: [1, 1.2, 1], opacity: [0.4, 0.7, 0.4] }}
         transition={{ duration: 6, repeat: Infinity }}
       />
       <motion.div
-        className="absolute bottom-[-150px] right-[-150px] w-[400px] h-[400px] bg-yellow-400/20 rounded-full blur-[140px]"
+        className="absolute bottom-[-150px] right-[-150px] w-[400px] h-[400px] bg-yellow-500/20 rounded-full blur-[140px]"
         animate={{ scale: [1.2, 1, 1.2], opacity: [0.3, 0.6, 0.3] }}
         transition={{ duration: 7, repeat: Infinity }}
       />
 
       {/* 🌿 Footer Content */}
-      <div className="relative max-w-7xl mx-auto px-6 py-20">
+      <div className="relative w-full px-4 py-20">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-14">
           {/* ✅ Brand Info */}
           <motion.div
@@ -93,10 +93,10 @@ export function Footer() {
           >
             {/* Logo */}
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-r from-green-400 to-yellow-400 flex items-center justify-center shadow-xl">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-r from-green-500 to-yellow-500 flex items-center justify-center shadow-xl">
                 <Sprout className="h-7 w-7 text-white" />
               </div>
-              <h2 className="text-4xl font-extrabold bg-gradient-to-r from-green-400 to-yellow-400 bg-clip-text text-transparent">
+              <h2 className="text-4xl font-extrabold bg-gradient-to-r from-green-500 to-yellow-500 bg-clip-text text-transparent">
                 AgriGuard
               </h2>
             </div>
@@ -120,7 +120,7 @@ export function Footer() {
               <button
                 type="submit"
                 disabled={!email || isSubscribed || isLoading}
-                className="p-3 rounded-xl bg-gradient-to-r from-green-400 to-yellow-400 hover:opacity-90 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                className="p-3 rounded-xl bg-gradient-to-r from-green-500 to-yellow-500 hover:opacity-90 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubscribed ? <Check className="w-4 h-4 text-white" /> : <Send className="w-4 h-4 text-white" />}
               </button>
@@ -133,7 +133,7 @@ export function Footer() {
                   key={social.label}
                   href={social.href}
                   whileHover={{ scale: 1.15, y: -4 }}
-                  className="w-12 h-12 flex items-center justify-center rounded-2xl bg-white/10 hover:bg-gradient-to-r hover:from-green-400 hover:to-yellow-400 transition shadow-lg"
+                  className="w-12 h-12 flex items-center justify-center rounded-2xl bg-white/10 hover:bg-gradient-to-r hover:from-green-500 hover:to-yellow-500 transition shadow-lg"
                 >
                   <social.icon className="w-5 h-5" />
                 </motion.a>
@@ -148,7 +148,7 @@ export function Footer() {
             transition={{ duration: 0.7, delay: 0.2 }}
             viewport={{ once: true }}
           >
-            <h4 className="text-xl font-bold mb-6 text-yellow-400">
+            <h4 className="text-xl font-bold mb-6 text-yellow-500">
               Quick Links
             </h4>
             <ul className="space-y-4">
@@ -156,7 +156,7 @@ export function Footer() {
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-green-100/80 hover:text-yellow-400 transition-all hover:translate-x-2 inline-block"
+                    className="text-green-100/80 hover:text-yellow-500 transition-all hover:translate-x-2 inline-block"
                   >
                     {link.label}
                   </Link>
@@ -172,7 +172,7 @@ export function Footer() {
             transition={{ duration: 0.7, delay: 0.4 }}
             viewport={{ once: true }}
           >
-            <h4 className="text-xl font-bold mb-6 text-yellow-400">
+            <h4 className="text-xl font-bold mb-6 text-yellow-500">
               Contact Us
             </h4>
 

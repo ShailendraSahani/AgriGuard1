@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const providerId = (session.user as any)._id;
+    const providerId = session.user.id;
 
     // Get all services for this provider
     const services = await Service.find({ provider: providerId });

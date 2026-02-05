@@ -76,7 +76,7 @@ function generateBookingPDF(bookingData: any) {
   doc.text(`Farmer: ${bookingData.farmer?.name || 'N/A'}`, 20, 70);
   doc.text(`Provider: ${bookingData.provider?.name || 'N/A'}`, 20, 80);
   doc.text(`Booking Date: ${new Date(bookingData.bookingDate).toLocaleDateString()}`, 20, 90);
-  doc.text(`Status: ${bookingData.status || 'Pending'}`, 20, 100);
+  doc.text(`Status: ${bookingData.status || 'pending'}`, 20, 100);
   if (bookingData.notes) {
     doc.text(`Notes: ${bookingData.notes}`, 20, 110);
   }
@@ -119,6 +119,34 @@ export async function sendBookingConfirmation(email: string, bookingData: any) {
     console.log('Booking confirmation email sent to:', email);
   } catch (error) {
     console.error('Error sending booking email:', error);
+  }
+}
+
+export async function sendProviderBookingAlert(email: string, bookingData: any) {
+  try {
+    const subject = 'AgriGuard - New Booking Alert';
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #2d5a27;">New Booking Received!</h2>
+        <p>You have a new booking request.</p>
+        <p><strong>Service:</strong> ${bookingData.service?.name || 'N/A'}</p>
+        <p><strong>Farmer:</strong> ${bookingData.farmer?.name || 'N/A'}</p>
+        <p><strong>Date:</strong> ${new Date(bookingData.workStartDate || bookingData.bookingDate).toLocaleDateString()}</p>
+        <p>Please review and accept or reject this booking in your dashboard.</p>
+        <p>Best regards,<br>AgriGuard Team</p>
+      </div>
+    `;
+
+    await transporter.sendMail({
+      from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+      to: email,
+      subject,
+      html,
+    });
+
+    console.log('Provider booking alert sent to:', email);
+  } catch (error) {
+    console.error('Error sending provider booking alert:', error);
   }
 }
 

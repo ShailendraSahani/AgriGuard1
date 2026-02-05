@@ -8,6 +8,42 @@ import Notification from '@/models/Notification';
 import User from '@/models/User';
 import { sendLeaseRequestNotification } from '@/lib/email';
 
+export async function GET(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions);
+
+    if (!session || !session.user?.id) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    await connectDB();
+
+    // Fetch lease requests for lands owned by the farmer
+    const leaseRequests = await LeaseRequest.find()
+      .populate({
+        path: 'land',
+        match: { farmer: session.user.id },
+        select: 'title location'
+      })
+      .populate('requester', 'name email')
+      .sort({ requestedAt: -1 });
+
+    // Filter out requests where land is null (not owned by the farmer)
+    const filteredRequests = leaseRequests.filter(request => request.land !== null);
+
+    return NextResponse.json(filteredRequests);
+  } catch (error) {
+    console.error('Error fetching lease requests:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -91,6 +127,16 @@ export async function POST(request: NextRequest) {
     });
 
     await notification.save();
+
+    // Send real-time notification via socket
+    const io = (global as any).io;
+    if (io) {
+      io.to(landDetails.farmer._id.toString()).emit('lease-request', {
+        message: 'New lease request received',
+        land: landDetails.title,
+        requester: session.user.name || 'User'
+      });
+    }
 
     // Send email notification to land owner
     await sendLeaseRequestNotification(

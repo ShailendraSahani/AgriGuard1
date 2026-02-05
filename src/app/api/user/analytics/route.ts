@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     // Fetch completed bookings for income calculation
     const completedBookings = await Booking.find({
       farmer: userId,
-      status: 'Completed'
+      status: 'completed'
     }).populate('service', 'price');
 
     // Calculate total income

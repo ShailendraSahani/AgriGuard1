@@ -4,6 +4,8 @@ import Land from '@/models/Land';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 
+const cache = (globalThis as any).__landsCache as Map<string, { expiresAt: number; data: any }> | undefined;
+
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
@@ -36,6 +38,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     if (!land) {
       return NextResponse.json({ error: 'Land not found or unauthorized' }, { status: 404 });
     }
+    cache?.clear();
     return NextResponse.json(land);
   } catch (error) {
     return NextResponse.json({ error: 'Failed to update land' }, { status: 500 });
@@ -55,6 +58,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     if (!land) {
       return NextResponse.json({ error: 'Land not found or unauthorized' }, { status: 404 });
     }
+    cache?.clear();
     return NextResponse.json({ message: 'Land deleted' });
   } catch (error) {
     return NextResponse.json({ error: 'Failed to delete land' }, { status: 500 });

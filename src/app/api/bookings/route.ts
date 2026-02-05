@@ -15,10 +15,13 @@ export async function GET(request: NextRequest) {
     }
 
     // Get bookings for services provided by this provider
-    const services = await Service.find({ provider: (session.user as any)._id });
+    const services = await Service.find({ provider: session.user.id });
     const serviceIds = services.map(s => s._id);
 
-    const bookings = await Booking.find({ service: { $in: serviceIds } }).populate('service').populate('farmer');
+    const bookings = await Booking.find({ service: { $in: serviceIds } })
+      .populate('service')
+      .populate('farmer')
+      .populate('provider', 'name email');
     return NextResponse.json(bookings);
   } catch (error) {
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
@@ -43,7 +46,7 @@ export async function PATCH(request: NextRequest) {
 
     // Check if the provider owns the service
     const service = await Service.findById(booking.service);
-    if (service.provider.toString() !== (session.user as any)._id) {
+    if (service.provider.toString() !== session.user.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

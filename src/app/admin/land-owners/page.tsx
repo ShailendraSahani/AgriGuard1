@@ -4,15 +4,16 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import { useSocket } from '@/contexts/SocketContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { PDFExport } from '@/components/admin/PDFExport';
-import { MapPin, Plus } from 'lucide-react';
 import Modal from '@/components/ui/modal';
 import AddUserForm from '@/components/admin/AddUserForm';
-import AddLandForm from '@/components/admin/AddLandForm';
+import { MapPin, Plus } from 'lucide-react';
+
 
 interface User {
   _id: string;
@@ -24,10 +25,11 @@ interface User {
 export default function LandOwnersPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const { socket } = useSocket();
   const [landOwners, setLandOwners] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isLandModalOpen, setIsLandModalOpen] = useState(false);
+
 
   const fetchLandOwners = async () => {
     try {
@@ -52,6 +54,20 @@ export default function LandOwnersPage() {
     fetchLandOwners();
   }, [session, status, router]);
 
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleDataUpdate = () => {
+      fetchLandOwners();
+    };
+
+    socket.on('dataUpdated', handleDataUpdate);
+
+    return () => {
+      socket.off('dataUpdated', handleDataUpdate);
+    };
+  }, [socket]);
+
   if (status === 'loading' || loading) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -72,11 +88,11 @@ export default function LandOwnersPage() {
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-gray-900">Land Owners Management</h1>
         <div className="flex gap-2">
-          <Button onClick={() => setIsModalOpen(true)} className="bg-green-600 hover:bg-green-700">
+          <Button onClick={() => setIsModalOpen(true)} className="bg-green-500 hover:bg-green-600">
             <Plus className="w-4 h-4 mr-2" />
             Add Land Owner
           </Button>
-          <Button onClick={() => setIsLandModalOpen(true)} className="bg-blue-600 hover:bg-blue-700">
+          <Button onClick={() => router.push('/admin/add-land')} className="bg-yellow-500 hover:bg-yellow-600">
             <Plus className="w-4 h-4 mr-2" />
             Add Land
           </Button>
@@ -115,21 +131,12 @@ export default function LandOwnersPage() {
         </CardContent>
       </Card>
 
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Add New Land Owner">
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Add Land Owner">
         <AddUserForm
           role="land-owner"
           onSuccess={() => {
             setIsModalOpen(false);
             fetchLandOwners();
-          }}
-        />
-      </Modal>
-
-      <Modal isOpen={isLandModalOpen} onClose={() => setIsLandModalOpen(false)} title="Add New Land">
-        <AddLandForm
-          onSuccess={() => {
-            setIsLandModalOpen(false);
-            // Optionally refresh land data if needed
           }}
         />
       </Modal>

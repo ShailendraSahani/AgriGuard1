@@ -43,13 +43,9 @@ export function Navbar() {
       animate={{ y: 0 }}
       transition={{ duration: 0.6 }}
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300
-        ${
-          scrolled
-            ? 'bg-white/90 backdrop-blur-xl shadow-xl border-b border-green-200'
-            : 'bg-white/70 backdrop-blur-md border-b border-green-100'
-        }`}
+        bg-gradient-to-r from-green-500 to-yellow-500 backdrop-blur-xl shadow-2xl border-b border-white/20`}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full px-4">
         <div className="flex justify-between items-center h-14">
 
           {/* ✅ Logo */}
@@ -74,7 +70,7 @@ export function Navbar() {
               <Link
                 key={item.href}
                 href={item.href}
-                className="text-sm font-semibold text-gray-700 hover:text-green-600 transition"
+                className="text-sm font-semibold text-white hover:text-yellow-200 transition"
               >
                 {item.label}
               </Link>
@@ -123,7 +119,7 @@ export function Navbar() {
                       <button
                         onClick={() => signOut()}
                         className="w-full flex items-center gap-2 px-4 py-3 text-sm 
-                        font-semibold text-red-600 hover:bg-red-50 transition"
+                        font-semibold text--600 hover:bg-red-50 transition"
                       >
                         <LogOut className="h-4 w-4" />
                         Logout
@@ -156,8 +152,8 @@ export function Navbar() {
           {/* ✅ Mobile Menu Button */}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden p-2 rounded-xl bg-green-100 text-green-700 
-            hover:bg-green-200 transition"
+            className="md:hidden p-2 rounded-xl bg-white/20 text-white
+            hover:bg-white/30 transition backdrop-blur-sm"
           >
             {isMenuOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
@@ -172,7 +168,7 @@ export function Navbar() {
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="md:hidden bg-white/90 backdrop-blur-xl border-t border-green-100"
+            className="md:hidden bg-gradient-to-b from-green-500/95 to-yellow-500/95 backdrop-blur-xl border-t border-white/20"
           >
             <div className="px-4 py-4 space-y-3">
               {navItems.map((item) => (
@@ -180,9 +176,8 @@ export function Navbar() {
                   key={item.href}
                   href={item.href}
                   onClick={() => setIsMenuOpen(false)}
-                  className="block px-4 py-3 rounded-xl font-semibold text-gray-700
-                  hover:bg-gradient-to-r hover:from-green-500 hover:to-yellow-500
-                  hover:text-white transition"
+                  className="block px-4 py-3 rounded-xl font-semibold text-white
+                  hover:bg-white/20 hover:text-yellow-200 transition"
                 >
                   {item.label}
                 </Link>
@@ -193,9 +188,8 @@ export function Navbar() {
                   <Link
                     href="/auth/signin"
                     onClick={() => setIsMenuOpen(false)}
-                    className="block px-4 py-3 rounded-xl font-semibold text-gray-700
-                    hover:bg-gradient-to-r hover:from-green-500 hover:to-yellow-500
-                    hover:text-white transition"
+                    className="block px-4 py-3 rounded-xl font-semibold text-white
+                    hover:bg-white/20 hover:text-yellow-200 transition"
                   >
                     Log In
                   </Link>
@@ -203,9 +197,8 @@ export function Navbar() {
                   <Link
                     href="/signup"
                     onClick={() => setIsMenuOpen(false)}
-                    className="block px-4 py-3 rounded-xl font-semibold text-gray-700
-                    hover:bg-gradient-to-r hover:from-green-500 hover:to-yellow-500
-                    hover:text-white transition"
+                    className="block px-4 py-3 rounded-xl font-semibold text-white
+                    hover:bg-white/20 hover:text-yellow-200 transition"
                   >
                     Sign Up
                   </Link>

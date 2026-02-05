@@ -1,13 +1,18 @@
-# TODO: Implement Lease Request Notifications for Land Owners
+# Make Website Responsive Plan
 
-## Steps to Complete:
-1. Modify `src/app/api/lease-requests/route.ts` to add notification creation for land owners when a lease request is created.
-   - After saving the lease request, fetch the land details to get the farmer (land owner) ID.
-   - Create a new Notification document with type 'lease', appropriate title and message, and send it to the farmer.
-2. Test the implementation to ensure notifications are created correctly.
-3. Verify that land owners can view these notifications in their dashboard or notification section.
+## 1. Update CarouselSection.tsx
+- [x] Change fixed height h-[480px] to responsive height (e.g., h-64 md:h-80 lg:h-[480px])
+- [x] Adjust text positioning for mobile (bottom-4 md:bottom-10, left-4 md:left-10, right-4 md:right-10)
+- [x] Make text sizes responsive (text-2xl md:text-4xl for title, text-sm md:text-lg for description)
+- [x] Adjust button size for mobile
 
-## Progress:
-- [x] Step 1: Edit lease-requests/route.ts to add notification logic.
-- [x] Step 2: Test the changes.
-- [x] Step 3: Verify notification display.
+## 2. Review and Update HeroSection.tsx
+- [x] Ensure text sizes are properly responsive
+- [x] Check search bar layout on mobile
+- [x] Adjust padding and margins for mobile
+- [x] Make floating icons responsive
+
+## 3. Test Responsiveness
+- [ ] Test on mobile, tablet, and desktop breakpoints
+- [ ] Ensure no horizontal scroll
+- [ ] Check readability and usability on small screens

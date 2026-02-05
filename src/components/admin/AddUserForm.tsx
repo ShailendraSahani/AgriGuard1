@@ -17,6 +17,12 @@ export default function AddUserForm({ role, onSuccess }: AddUserFormProps) {
     password: '',
     location: '',
     contact: '',
+    verificationStatus: false,
+    farmSize: '',
+    crops: '',
+    experienceYears: '',
+    servicesOffered: '',
+    certifications: '',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -33,8 +39,20 @@ export default function AddUserForm({ role, onSuccess }: AddUserFormProps) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          ...formData,
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
           role,
+          profile: {
+            location: formData.location,
+            contact: formData.contact,
+            verificationStatus: formData.verificationStatus,
+            farmSize: formData.farmSize,
+            crops: formData.crops,
+            experienceYears: parseInt(formData.experienceYears) || undefined,
+            servicesOffered: formData.servicesOffered,
+            certifications: formData.certifications,
+          },
         }),
       });
 
@@ -46,6 +64,12 @@ export default function AddUserForm({ role, onSuccess }: AddUserFormProps) {
           password: '',
           location: '',
           contact: '',
+          verificationStatus: false,
+          farmSize: '',
+          crops: '',
+          experienceYears: '',
+          servicesOffered: '',
+          certifications: '',
         });
       } else {
         const data = await res.json();
@@ -66,7 +90,8 @@ export default function AddUserForm({ role, onSuccess }: AddUserFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="max-h-96 overflow-y-auto">
+      <form onSubmit={handleSubmit} onClick={(e) => e.stopPropagation()} className="space-y-4 p-4">
       <div>
         <Label htmlFor="name">Name</Label>
         <Input
@@ -130,6 +155,77 @@ export default function AddUserForm({ role, onSuccess }: AddUserFormProps) {
         />
       </div>
 
+      <div>
+        <Label htmlFor="verificationStatus">Verification Status</Label>
+        <input
+          id="verificationStatus"
+          name="verificationStatus"
+          type="checkbox"
+          checked={formData.verificationStatus}
+          onChange={(e) => setFormData(prev => ({ ...prev, verificationStatus: e.target.checked }))}
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="farmSize">Farm Size</Label>
+        <Input
+          id="farmSize"
+          name="farmSize"
+          type="text"
+          value={formData.farmSize}
+          onChange={handleChange}
+          placeholder="e.g., 5 acres"
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="crops">Crops</Label>
+        <Input
+          id="crops"
+          name="crops"
+          type="text"
+          value={formData.crops}
+          onChange={handleChange}
+          placeholder="e.g., Rice, Wheat"
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="experienceYears">Experience Years</Label>
+        <Input
+          id="experienceYears"
+          name="experienceYears"
+          type="number"
+          value={formData.experienceYears}
+          onChange={handleChange}
+          placeholder="Years of experience"
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="servicesOffered">Services Offered</Label>
+        <Input
+          id="servicesOffered"
+          name="servicesOffered"
+          type="text"
+          value={formData.servicesOffered}
+          onChange={handleChange}
+          placeholder="e.g., Tractor Rental, Harvesting"
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="certifications">Certifications</Label>
+        <Input
+          id="certifications"
+          name="certifications"
+          type="text"
+          value={formData.certifications}
+          onChange={handleChange}
+          placeholder="e.g., Organic Farming Certificate"
+        />
+      </div>
+
       {error && (
         <div className="text-red-600 text-sm">{error}</div>
       )}
@@ -140,5 +236,6 @@ export default function AddUserForm({ role, onSuccess }: AddUserFormProps) {
         </Button>
       </div>
     </form>
+    </div>
   );
 }

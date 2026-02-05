@@ -5,6 +5,7 @@ import connectDB from '@/lib/db';
 import Package from '@/models/Package';
 import User from '@/models/User';
 import { sendPackageAdded } from '@/lib/email';
+import { getSocketServer } from '@/lib/globalSocket';
 
 export async function GET(request: NextRequest) {
   try {
@@ -66,9 +67,25 @@ export async function POST(request: NextRequest) {
     await connectDB();
 
     const body = await request.json();
-    const { name, crop, duration, price, features, description } = body;
+    const {
+      name,
+      planType,
+      crop,
+      durationDays,
+      price,
+      discountPrice,
+      isPopular,
+      features,
+      limits,
+      aiModules,
+      notifications,
+      satelliteMonitoring,
+      support,
+      marketplaceAccess,
+      benefits,
+    } = body;
 
-    if (!name || !crop || !duration || !price || !features || !description) {
+    if (!name || !crop || !durationDays || price == null || !features) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -77,11 +94,20 @@ export async function POST(request: NextRequest) {
 
     const newPackage = new Package({
       name,
+      planType,
       crop,
-      duration,
+      durationDays,
       price,
+      discountPrice,
+      isPopular,
       features,
-      description,
+      limits,
+      aiModules,
+      notifications,
+      satelliteMonitoring,
+      support,
+      marketplaceAccess,
+      benefits,
       provider: (session.user as { id: string }).id,
     });
 
@@ -91,6 +117,11 @@ export async function POST(request: NextRequest) {
     const provider = await User.findById((session.user as { id: string }).id);
     if (provider) {
       sendPackageAdded(provider.email, newPackage);
+    }
+
+    const io = getSocketServer();
+    if (io) {
+      io.emit('packages-updated');
     }
 
     return NextResponse.json(newPackage, { status: 201 });
