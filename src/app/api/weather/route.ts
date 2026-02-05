@@ -19,7 +19,16 @@ export async function GET(request: Request) {
     }
 
     const data = await res.json();
-    return NextResponse.json(data);
+    const safeData = {
+      main: {
+        temp: typeof data.main.temp === 'object' ? (data.main.temp as any).value : data.main.temp,
+        humidity: typeof data.main.humidity === 'object' ? (data.main.humidity as any).value : data.main.humidity,
+      },
+      weather: data.weather.map((w: any) => ({
+        description: typeof w.description === 'object' ? (w.description as any).value : w.description,
+      })),
+    };
+    return NextResponse.json(safeData);
   } catch (error) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }

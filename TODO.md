@@ -1,12 +1,12 @@
-# TODO: Remove Map-Related Features from Land Model
+# TODO: Enhance User Dashboard with Tracking Features
 
-## Steps to Complete
-
-- [x] Remove geometry and centroid from ILand interface and LandSchema in src/models/Land.ts, including the 2dsphere indexes.
-- [x] Update src/components/land/LandMapViewer.tsx to remove geometry and centroid usage.
-- [x] Update src/components/land/LandBoundaryMap.tsx to remove or modify boundary drawing functionality.
-- [x] Update src/app/api/lands/route.ts to remove geometry and centroid handling.
-- [x] Update src/app/farmer/lands/new/page.tsx to remove map-related UI and logic.
-- [x] Update src/app/lands/[id]/page.tsx to remove map-related UI and logic.
-- [x] Test the application for any remaining references or errors.
-- [x] Consider database migration to remove these fields from existing data.
+## Tasks
+- [ ] Add state management for bookings and lease requests in dashboard
+- [ ] Implement API calls to fetch user's bookings and lease requests
+- [ ] Add socket listeners for real-time updates on booking/lease status changes
+- [ ] Create "My Bookings" section with service details, status, provider, dates, amount, payment status
+- [ ] Create "My Lease Requests" section with land details, status, dates
+- [ ] Add action buttons (view details, cancel if pending)
+- [ ] Style the new sections with cards/tables for complete details
+- [ ] Test real-time updates functionality
+- [ ] Verify dashboard loads correctly with new features
