@@ -112,50 +112,14 @@ export default function UserDashboard() {
   ];
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-green-50 via-yellow-50 to-white">
-
-      {/* ✅ SIDEBAR */}
-      <aside className="w-72 bg-white shadow-xl border-r hidden md:flex flex-col p-6">
-        <h2 className="text-2xl font-extrabold bg-gradient-to-r from-green-500 to-yellow-500 bg-clip-text text-transparent">
-          AgriGuard 🌱
-        </h2>
-
-        <nav className="mt-10 space-y-4 font-semibold text-gray-700">
-          <Link href="/dashboard" className="hover:text-green-600">
-            Dashboard
-          </Link>
-          <Link href="/services" className="hover:text-green-600">
-            Book Services
-          </Link>
-          <Link href="/lands" className="hover:text-green-600">
-            Browse Lands
-          </Link>
-          <Link href="/reports" className="hover:text-green-600">
-            Reports
-          </Link>
-        </nav>
-
-        {/* Notifications */}
-        <div className="mt-auto p-4 rounded-xl bg-yellow-50 border border-yellow-200">
-          <h3 className="font-bold text-yellow-700 flex items-center gap-2">
-            🔔 Notifications
-          </h3>
-          <p className="text-sm text-gray-600 mt-2">
-            ⚠ Heavy Rain expected tomorrow.
-          </p>
-          <p className="text-sm text-gray-600">
-            ✅ Booking Confirmed successfully.
-          </p>
-        </div>
-      </aside>
-
-      {/* ✅ MAIN CONTENT */}
-      <main className="flex-1 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-yellow-50 to-white">
+      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div className="px-4 py-6 sm:px-0">
 
         {/* Header */}
-        <div className="flex justify-between items-center mb-10">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-10 gap-4">
           <div>
-            <h1 className="text-4xl font-extrabold text-gray-800">
+            <h1 className="text-2xl sm:text-4xl font-extrabold text-gray-800">
               Welcome,{" "}
               <span className="text-green-600">
                 {session?.user?.name}
@@ -167,7 +131,7 @@ export default function UserDashboard() {
             </p>
           </div>
 
-          <button className="px-6 py-3 rounded-xl bg-gradient-to-r from-green-500 to-yellow-500 text-white font-bold shadow-lg hover:scale-105 transition">
+          <button className="px-6 py-3 rounded-xl bg-gradient-to-r from-green-500 to-yellow-500 text-white font-bold shadow-lg hover:scale-105 transition w-full sm:w-auto">
             + New Booking
           </button>
         </div>
@@ -263,7 +227,7 @@ export default function UserDashboard() {
             </ResponsiveContainer>
           </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 }
