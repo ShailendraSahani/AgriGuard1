@@ -183,7 +183,29 @@ export function Navbar() {
                 </Link>
               ))}
 
-              {!session && (
+              {session ? (
+                <>
+                  <Link
+                    href={`/${session.user?.role}/dashboard`}
+                    onClick={() => setIsMenuOpen(false)}
+                    className="block px-4 py-3 rounded-xl font-semibold text-white
+                    hover:bg-white/20 hover:text-yellow-200 transition"
+                  >
+                    Dashboard
+                  </Link>
+
+                  <button
+                    onClick={() => {
+                      signOut();
+                      setIsMenuOpen(false);
+                    }}
+                    className="w-full text-left px-4 py-3 rounded-xl font-semibold text-white
+                    hover:bg-white/20 hover:text-yellow-200 transition"
+                  >
+                    Logout
+                  </button>
+                </>
+              ) : (
                 <>
                   <Link
                     href="/auth/signin"
