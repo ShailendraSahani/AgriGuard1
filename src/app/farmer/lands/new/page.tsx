@@ -9,13 +9,9 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { motion } from 'framer-motion';
-import { MapPin, Ruler, Droplets, IndianRupee, Calendar, Image as ImageIcon, X, Upload } from 'lucide-react';
-import dynamic from 'next/dynamic';
+import { MapPin, Ruler, Droplets, IndianRupee, Calendar, Image as ImageIcon } from 'lucide-react';
 
-const LandBoundaryMap = dynamic(() => import('@/components/land/LandBoundaryMap').then(mod => ({ default: mod.LandBoundaryMap })), {
-  ssr: false,
-  loading: () => <div className="h-64 md:h-80 lg:h-[420px] w-full bg-gray-100 animate-pulse rounded-2xl border border-green-200 shadow-sm" />
-});
+
 
 export default function AddLandPage() {
   const { data: session, status } = useSession();
@@ -23,8 +19,7 @@ export default function AddLandPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
-  const [geometry, setGeometry] = useState<{ type: 'Polygon'; coordinates: number[][][] } | null>(null);
-  const [centroid, setCentroid] = useState<{ type: 'Point'; coordinates: number[] } | null>(null);
+
 
   const [formData, setFormData] = useState({
     title: '',
@@ -55,12 +50,6 @@ export default function AddLandPage() {
     setSuccess(false);
 
     try {
-      if (!geometry || !centroid) {
-        setError('Please draw the land boundary on the map.');
-        setLoading(false);
-        return;
-      }
-
       const payload = {
         title: formData.title,
         location: {
@@ -68,8 +57,6 @@ export default function AddLandPage() {
           district: formData.district,
           village: formData.village,
         },
-        geometry,
-        centroid,
         size: {
           value: parseFloat(formData.sizeValue),
           unit: formData.sizeUnit,
@@ -323,23 +310,7 @@ export default function AddLandPage() {
 
 
 
-                {/* Boundary Map */}
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.55 }}
-                  className="space-y-2"
-                >
-                  <Label className="text-sm font-medium flex items-center gap-2">
-                    <MapPin className="w-4 h-4 text-green-600" /> Land Boundary Map *
-                  </Label>
-                  <LandBoundaryMap
-                    onChange={(newGeometry, newCentroid) => {
-                      setGeometry(newGeometry);
-                      setCentroid(newCentroid);
-                    }}
-                  />
-                </motion.div>
+
 
                 {/* Image Upload Placeholder */}
                 <motion.div

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { LandMapViewer } from '@/components/land/LandMapViewer';
+
 
 interface Land {
   _id: string;
@@ -161,13 +161,6 @@ export default function LandDetails() {
                 </div>
               </div>
             </div>
-
-            {land.geometry?.coordinates?.length ? (
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold mb-3">Land Boundary Map</h3>
-                <LandMapViewer geometry={land.geometry} centroid={land.centroid} />
-              </div>
-            ) : null}
 
             {/* Description */}
             {land.description && (

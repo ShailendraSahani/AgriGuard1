@@ -85,29 +85,7 @@ export async function GET(request: Request) {
       filter.waterAvailability = { $regex: waterAvailability, $options: 'i' };
     }
 
-    // Geo filters
-    if (bbox) {
-      const parts = bbox.split(',').map((value) => parseFloat(value));
-      if (parts.length === 4) {
-        const [west, south, east, north] = parts;
-        filter.centroid = {
-          $geoWithin: {
-            $box: [
-              [west, south],
-              [east, north],
-            ],
-          },
-        };
-      }
-    } else if (lat && lng) {
-      const radiusMeters = (radiusKm ? parseFloat(radiusKm) : 10) * 1000;
-      filter.centroid = {
-        $near: {
-          $geometry: { type: 'Point', coordinates: [parseFloat(lng), parseFloat(lat)] },
-          $maxDistance: radiusMeters,
-        },
-      };
-    }
+
 
     const lands = await Land.find(filter)
       .populate('farmer', 'name email')

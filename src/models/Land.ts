@@ -7,14 +7,7 @@ export interface ILand extends Document {
     district: string;
     village: string;
   };
-  geometry?: {
-    type: 'Polygon';
-    coordinates: number[][][];
-  };
-  centroid?: {
-    type: 'Point';
-    coordinates: number[];
-  };
+
   size: {
     value: number;
     unit: 'acre' | 'bigha';
@@ -37,28 +30,7 @@ const LandSchema: Schema = new Schema({
     district: { type: String, required: true },
     village: { type: String, required: true },
   },
-  geometry: {
-    type: {
-      type: String,
-      enum: ['Polygon'],
-      default: 'Polygon',
-    },
-    coordinates: {
-      type: [[[Number]]],
-      default: [],
-    },
-  },
-  centroid: {
-    type: {
-      type: String,
-      enum: ['Point'],
-      default: 'Point',
-    },
-    coordinates: {
-      type: [Number],
-      default: [],
-    },
-  },
+
   size: {
     value: { type: Number, required: true },
     unit: { type: String, enum: ['acre', 'bigha'], required: true },
